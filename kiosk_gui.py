@@ -5,6 +5,8 @@ import webbrowser
 from data import products, prep_times
 from firebase_config import db
 from order_logic import build_order_data
+from card_service import process_card_payment
+from rfid_reader import read_card_uid
 
 order = {}
 
@@ -55,23 +57,46 @@ def remove_selected():
 
     update_cart()
 
-
 def checkout():
     if not order:
         messagebox.showinfo("Checkout", "Cart is empty")
         return
 
     payment_method = payment_var.get()
+    total = sum(products[p] * q for p, q in order.items())
 
-    data = build_order_data(order, products, prep_times, payment_method, db)
     try:
+        if payment_method == "Card":
+            messagebox.showinfo("Card Payment", "Apropie cardul")
+            uid = read_card_uid()
+
+            success, message, balance = process_card_payment(uid, total)
+
+            if not success:
+                messagebox.showerror("Eroare", message)
+                return
+
+            messagebox.showinfo(
+                "Succes",
+                f"{message}\nSold rămas: {balance} lei"
+            )
+
+        data = build_order_data(order, products, prep_times, payment_method, db)
+
+        if payment_method == "Card":
+            data["status"] = "paid"
+            data["card_uid"] = str(uid)
+        else:
+            data["status"] = "pending"
+
         db.child("orders").push(data)
-        webbrowser.open(f"http://127.0.0.1:5000/order/{data['order_id']}")        order.clear()
+        webbrowser.open(f"http://127.0.0.1:5000/order/{data['order_id']}")
+
+        order.clear()
         update_cart()
+
     except Exception as e:
         messagebox.showerror("Firebase Error", f"Order could not be saved.\n{e}")
-
-
 root = tk.Tk()
 root.title("Smart POS Kiosk")
 root.geometry("900x600")
