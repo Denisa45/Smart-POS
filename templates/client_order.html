@@ -4,119 +4,250 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="3">
-    <title>Order Status</title>
+    <title>Denisa's Special - Order Status</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
             margin: 0;
             min-height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            background: #e8e2b8;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 24px;
+            color: #7b5a3d;
         }
 
         .card {
-            background: white;
-            width: 420px;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 520px;
+            background: #f8f4e4;
+            border: 2px solid #ceb98d;
+            border-radius: 34px;
+            padding: 32px 28px;
+            box-shadow: 0 10px 24px rgba(123, 90, 61, 0.08);
             text-align: center;
         }
 
-        h1 {
-            margin-top: 0;
-            color: #2563eb;
+        .brand {
+            font-size: 15px;
+            color: #9a7b5f;
+            margin-bottom: 6px;
         }
 
-        p {
-            color: #374151;
-            font-size: 18px;
-            margin: 12px 0;
+        h1 {
+            margin: 0 0 18px 0;
+            font-size: 2.4rem;
+            color: #7b5a3d;
+        }
+
+        .subtitle {
+            color: #9a7b5f;
+            font-size: 1rem;
+            margin-bottom: 22px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .info-box {
+            background: #fffbee;
+            border-radius: 20px;
+            padding: 14px;
+            border: 1px solid #e3d5af;
+        }
+
+        .info-label {
+            font-size: 0.95rem;
+            color: #9a7b5f;
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .section {
+            text-align: left;
+            background: #fffbee;
+            border-radius: 24px;
+            padding: 18px;
+            border: 1px solid #e3d5af;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            margin: 0 0 12px 0;
+            font-size: 1.15rem;
+            color: #7b5a3d;
+        }
+
+        .products-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .products-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8f4e4;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .status-wrap {
+            margin-bottom: 18px;
         }
 
         .status {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 999px;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 8px;
+            font-weight: 700;
+            font-size: 1rem;
         }
 
         .status-pending {
-            background: #fef3c7;
-            color: #92400e;
+            background: #f7e7b7;
+            color: #8a5a12;
         }
 
         .status-preparing {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #eadfb9;
+            color: #7b5a3d;
         }
 
         .status-ready {
-            background: #dcfce7;
-            color: #166534;
+            background: #d8efcf;
+            color: #2f6b2f;
+        }
+
+        .time-box {
+            background: #fffbee;
+            border-radius: 24px;
+            padding: 18px;
+            border: 1px solid #e3d5af;
+            margin-bottom: 18px;
+        }
+
+        .time-label {
+            color: #9a7b5f;
+            margin-bottom: 8px;
         }
 
         .remaining {
-            font-size: 24px;
-            font-weight: bold;
-            color: #7c3aed;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #7b5a3d;
         }
 
         .ready-message {
-            margin-top: 18px;
-            font-size: 22px;
-            font-weight: bold;
-            color: #16a34a;
+            margin-top: 8px;
+            background: #dff3d7;
+            color: #2f6b2f;
+            border-radius: 22px;
+            padding: 16px 18px;
+            font-size: 1.15rem;
+            font-weight: 700;
         }
 
-        ul {
-            text-align: left;
-            display: inline-block;
-            margin-top: 8px;
+        .small-note {
+            margin-top: 16px;
+            color: #9a7b5f;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 560px) {
+            .card {
+                padding: 24px 18px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .products-list li {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="card">
+        <div class="brand">Denisa's Special</div>
         <h1>Order #{{ order.display_number }}</h1>
+        <div class="subtitle">Your snack is being prepared with care ✨</div>
 
-        <p><strong>Total:</strong> {{ order.total }} lei</p>
-        <p><strong>Payment:</strong> {{ order.payment_method }}</p>
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Total</div>
+                <div class="info-value">{{ order.total }} lei</div>
+            </div>
 
-        <p><strong>Products:</strong></p>
-        <ul>
-            {% for product, quantity in order.products.items() %}
-                <li>{{ product }} x {{ quantity }}</li>
-            {% endfor %}
-        </ul>
+            <div class="info-box">
+                <div class="info-label">Payment</div>
+                <div class="info-value">{{ order.payment_method }}</div>
+            </div>
+        </div>
 
-        <p>
-            <strong>Status:</strong><br>
+        <div class="section">
+            <h2 class="section-title">Your order</h2>
+            <ul class="products-list">
+                {% for product, quantity in order.products.items() %}
+                    <li>
+                        <span>{{ product }}</span>
+                        <strong>x {{ quantity }}</strong>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="status-wrap">
+            <div class="section-title" style="text-align:center; margin-bottom:10px;">Status</div>
             <span class="status status-{{ order.status }}">
                 {% if order.status == "pending" %}
-                    ? Pending
+                    Pending
                 {% elif order.status == "preparing" %}
-                    ?? Preparing
+                    Preparing
                 {% elif order.status == "ready" %}
-                    ? Ready
+                    Ready
                 {% else %}
-                    ? Unknown
+                    Unknown
                 {% endif %}
             </span>
-        </p>
+        </div>
 
-        <p><strong>Time left:</strong></p>
-        <p class="remaining">{{ order.remaining_time }} sec</p>
+        <div class="time-box">
+            <div class="time-label">Time left</div>
+            <div class="remaining">{{ order.remaining_time }} sec</div>
+        </div>
 
         {% if order.status == "ready" %}
             <div class="ready-message">
-                ? Please pick up your order
+                Your order is ready. Please pick it up 💚
             </div>
         {% endif %}
+
+        <div class="small-note">This page refreshes automatically.</div>
     </div>
 </body>
 </html>

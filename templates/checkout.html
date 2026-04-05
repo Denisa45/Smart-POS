@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Denisa's Special - Checkout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #e8e2b8;
+      color: #7b5a3d;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand small {
+      display: block;
+      font-size: 1rem;
+      color: #9a7b5f;
+      margin-bottom: 4px;
+    }
+
+    .brand h1 {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .soft-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #f7f2dc;
+      color: #7b5a3d;
+      box-shadow: 0 4px 0 rgba(123, 90, 61, 0.12);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+    }
+
+    .panel {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 32px;
+      padding: 24px;
+      box-shadow: 0 8px 18px rgba(123, 90, 61, 0.08);
+    }
+
+    .panel h2 {
+      font-size: 1.7rem;
+      margin-bottom: 18px;
+    }
+
+    .summary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fffbee;
+      border-radius: 18px;
+      padding: 14px 16px;
+    }
+
+    .summary-item-name {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .summary-item-meta {
+      color: #9a7b5f;
+      font-size: 0.95rem;
+    }
+
+    .totals {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 2px dashed #d8c8a3;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 1.1rem;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .grand-total {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .payment-options {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .payment-card {
+      border: 2px solid #d8c8a3;
+      border-radius: 22px;
+      padding: 18px;
+      background: #fffbee;
+      cursor: pointer;
+    }
+
+    .payment-card.active {
+      border-color: #7dbb6d;
+      background: #f2faef;
+    }
+
+    .payment-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .payment-desc {
+      color: #9a7b5f;
+      font-size: 0.95rem;
+    }
+
+    .place-btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 18px;
+      background: #7b5a3d;
+      color: white;
+      font-size: 1.08rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .empty-box {
+      color: #9a7b5f;
+      font-style: italic;
+      background: #fffbee;
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .brand h1 {
+        font-size: 2.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand">
+        <small>Denisa's Special</small>
+        <h1>Checkout</h1>
+      </div>
+
+      <button class="soft-btn" onclick="window.location.href='/menu'">← Back to menu</button>
+    </div>
+
+    <form method="POST" action="/place_order" id="checkout-form">
+      <div class="layout">
+        <section class="panel">
+          <h2>Your order</h2>
+
+          <div class="summary-list" id="summary-list">
+            <div class="empty-box">Your selected items will appear here.</div>
+          </div>
+
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span id="subtotal">0 lei</span>
+            </div>
+            <div class="total-row">
+              <span>Service</span>
+              <span id="service">0 lei</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>Total</span>
+              <span id="grand-total">0 lei</span>
+            </div>
+          </div>
+
+          <div id="hidden-inputs"></div>
+        </section>
+
+        <aside class="panel">
+          <h2>Payment</h2>
+
+          <input type="hidden" name="payment_method" id="payment_method" value="Card">
+
+          <div class="payment-options">
+            <div class="payment-card active" onclick="selectPayment('Card', this)">
+              <div class="payment-title">💳 Card</div>
+              <div class="payment-desc">Fast and simple payment at the kiosk.</div>
+            </div>
+
+            <div class="payment-card" onclick="selectPayment('Cash', this)">
+              <div class="payment-title">💵 Cash</div>
+              <div class="payment-desc">Pay with cash at collection.</div>
+            </div>
+          </div>
+
+          <button type="submit" class="place-btn">Place Order</button>
+        </aside>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function selectPayment(method, element) {
+      document.getElementById("payment_method").value = method;
+
+      document.querySelectorAll(".payment-card").forEach(card => {
+        card.classList.remove("active");
+      });
+
+      element.classList.add("active");
+    }
+
+    function loadCheckout() {
+      const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+      const summaryList = document.getElementById("summary-list");
+      const subtotalEl = document.getElementById("subtotal");
+      const grandTotalEl = document.getElementById("grand-total");
+      const hiddenInputs = document.getElementById("hidden-inputs");
+
+      const entries = Object.entries(cart);
+      summaryList.innerHTML = "";
+      hiddenInputs.innerHTML = "";
+
+      if (entries.length === 0) {
+        summaryList.innerHTML = '<div class="empty-box">Your cart is empty.</div>';
+        subtotalEl.textContent = "0 lei";
+        document.getElementById("service").textContent = "0 lei";
+        grandTotalEl.textContent = "0 lei";
+        return;
+      }
+
+      let subtotal = 0;
+
+      entries.forEach(([name, item]) => {
+        const lineTotal = item.price * item.quantity;
+        subtotal += lineTotal;
+
+        const row = document.createElement("div");
+        row.className = "summary-item";
+        row.innerHTML = `
+          <div>
+            <div class="summary-item-name">${name}</div>
+            <div class="summary-item-meta">${item.quantity} x ${item.price} lei</div>
+          </div>
+          <div><strong>${lineTotal} lei</strong></div>
+        `;
+        summaryList.appendChild(row);
+
+        hiddenInputs.innerHTML += `
+          <input type="hidden" name="quantity_${name}" value="${item.quantity}">
+          <input type="hidden" name="price_${name}" value="${item.price}">
+        `;
+      });
+
+      subtotalEl.textContent = `${subtotal} lei`;
+      document.getElementById("service").textContent = "0 lei";
+      grandTotalEl.textContent = `${subtotal} lei`;
+    }
+
+    document.getElementById("checkout-form").addEventListener("submit", function(e) {
+      const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+
+      if (Object.keys(cart).length === 0) {
+        e.preventDefault();
+        alert("Your cart is empty.");
+      } else {
+        localStorage.removeItem("cart");
+      }
+    });
+
+    loadCheckout();
+  </script>
+</body>
+</html>

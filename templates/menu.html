@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Denisa's Special - Menu</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #e8e2b8;
+      color: #7b5a3d;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand small {
+      font-size: 1rem;
+      color: #9a7b5f;
+      margin-bottom: 4px;
+    }
+
+    .brand h1 {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .soft-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #f7f2dc;
+      color: #7b5a3d;
+      box-shadow: 0 4px 0 rgba(123, 90, 61, 0.12);
+      transition: transform 0.15s ease;
+    }
+
+    .soft-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+
+    .menu-section {
+      background: rgba(255, 251, 236, 0.55);
+      border: 2px solid #d5c79f;
+      border-radius: 32px;
+      padding: 24px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .product-card {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 28px;
+      padding: 18px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 8px 18px rgba(123, 90, 61, 0.08);
+      transition: transform 0.18s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .product-illustration {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .product-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .product-desc {
+      font-size: 0.95rem;
+      color: #9a7b5f;
+      text-align: center;
+      margin-bottom: 10px;
+      min-height: 40px;
+    }
+
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .price {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .add-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: #7dbb6d;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.05);
+      background: #6daa5d;
+    }
+
+    .cart-panel {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 32px;
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: 24px;
+      box-shadow: 0 8px 18px rgba(123, 90, 61, 0.08);
+    }
+
+    .cart-title {
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+    }
+
+    .cart-items {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+      min-height: 120px;
+    }
+
+    .empty-cart {
+      color: #9a7b5f;
+      font-style: italic;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: #fffbee;
+      border-radius: 18px;
+      padding: 10px 12px;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      background: #e8d9b0;
+      color: #7b5a3d;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .cart-total {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 18px;
+      background: #7b5a3d;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .checkout-btn:hover {
+      opacity: 0.92;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .cart-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .brand h1 {
+        font-size: 2.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand">
+        <small>Denisa's Special</small>
+        <h1>Choose your bite</h1>
+      </div>
+
+      <div class="top-actions">
+        <button class="soft-btn" onclick="window.location.href='/'">← Back</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="menu-section">
+        <h2 class="section-title">Today's favorites</h2>
+
+        <div class="products-grid">
+          {% for item in menu_items %}
+            <div class="product-card">
+              <div>
+                <div class="product-illustration">{{ item.emoji }}</div>
+                <div class="product-name">{{ item.name }}</div>
+                <div class="product-desc">{{ item.description }}</div>
+              </div>
+              <div class="product-footer">
+                <div class="price">{{ item.price }} lei</div>
+                <button class="add-btn" onclick="addToCart('{{ item.name|escape }}', {{ item.price }})">
+                  Add +
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <aside class="cart-panel">
+        <h2 class="cart-title">Your tray</h2>
+        <div class="cart-items" id="cart-items">
+          <div class="empty-cart">Nothing here yet.</div>
+        </div>
+        <div class="cart-total" id="cart-total">Total: 0 lei</div>
+        <button class="checkout-btn" onclick="goToCheckout()">Continue</button>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+
+    function saveCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    function addToCart(name, price) {
+      if (!cart[name]) {
+        cart[name] = { price: price, quantity: 0 };
+      }
+      cart[name].quantity += 1;
+      saveCart();
+      renderCart();
+    }
+
+    function changeQty(name, delta) {
+      if (!cart[name]) return;
+
+      cart[name].quantity += delta;
+
+      if (cart[name].quantity <= 0) {
+        delete cart[name];
+      }
+
+      saveCart();
+      renderCart();
+    }
+
+    function goToCheckout() {
+      if (Object.keys(cart).length === 0) {
+        alert("Your cart is empty.");
+        return;
+      }
+
+      window.location.href = "/checkout";
+    }
+
+    function renderCart() {
+      const cartItems = document.getElementById("cart-items");
+      const cartTotal = document.getElementById("cart-total");
+
+      cartItems.innerHTML = "";
+      let total = 0;
+
+      const entries = Object.entries(cart);
+
+      if (entries.length === 0) {
+        cartItems.innerHTML = '<div class="empty-cart">Nothing here yet.</div>';
+        cartTotal.textContent = "Total: 0 lei";
+        return;
+      }
+
+      entries.forEach(([name, item]) => {
+        total += item.price * item.quantity;
+
+        const row = document.createElement("div");
+        row.className = "cart-item";
+
+        row.innerHTML = `
+          <div>
+            <div class="cart-item-name">${name}</div>
+            <div>${item.price} lei</div>
+          </div>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="changeQty(${JSON.stringify(name)}, -1)">−</button>
+            <span>${item.quantity}</span>
+            <button class="qty-btn" onclick="changeQty(${JSON.stringify(name)}, 1)">+</button>
+          </div>
+        `;
+
+        cartItems.appendChild(row);
+      });
+
+      cartTotal.textContent = `Total: ${total} lei`;
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

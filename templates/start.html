@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denisa's Special</title>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: #e9e3b4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.container {
+    text-align: center;
+}
+
+.title {
+    font-size: 48px;
+    color: #7a5c3e;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+/* Sandwich image */
+.sandwich {
+    width: 300px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Button */
+button {
+    margin-top: 40px;
+    padding: 16px 40px;
+    font-size: 20px;
+    border-radius: 30px;
+    border: none;
+    background: #7bbf6a;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #6aa85b;
+}
+.admin-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+
+    background: rgba(255,255,255,0.3);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+
+    font-size: 12px;
+    color: #7b5a3d;
+    cursor: pointer;
+
+    opacity: 0.5;
+    transition: 0.2s;
+}
+
+.admin-btn:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.6);
+}
+.admin-hidden {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<button class="admin-btn" onclick="window.location.href='/dashboard'">
+    Admin
+</button><div class="container">
+    <div class="title">Denisa’s Special</div>
+
+    <img src="{{ url_for('static', filename='sandwich.png') }}" class="sandwich">
+    <br>
+
+    <button onclick="window.location.href='/menu'">
+        Tap to Start
+    </button>
+</div>
+
+</body>
+</html>
