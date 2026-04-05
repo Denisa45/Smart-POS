@@ -164,12 +164,24 @@
       margin-top: 10px;
     }
 
+    .place-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     .empty-box {
       color: #9a7b5f;
       font-style: italic;
       background: #fffbee;
       border-radius: 18px;
       padding: 16px;
+    }
+
+    .checkout-note {
+      margin-top: 10px;
+      color: #9a7b5f;
+      font-size: 0.95rem;
+      text-align: center;
     }
 
     @media (max-width: 900px) {
@@ -229,7 +241,7 @@
           <div class="payment-options">
             <div class="payment-card active" onclick="selectPayment('Card', this)">
               <div class="payment-title">💳 Card</div>
-              <div class="payment-desc">Fast and simple payment at the kiosk.</div>
+              <div class="payment-desc">Pay by tapping your RFID card on the reader.</div>
             </div>
 
             <div class="payment-card" onclick="selectPayment('Cash', this)">
@@ -238,7 +250,8 @@
             </div>
           </div>
 
-          <button type="submit" class="place-btn">Place Order</button>
+          <button type="submit" class="place-btn" id="place-btn">Place Order</button>
+          <div class="checkout-note" id="checkout-note"></div>
         </aside>
       </div>
     </form>
@@ -253,6 +266,12 @@
       });
 
       element.classList.add("active");
+
+      const note = document.getElementById("checkout-note");
+      if (method === "Card") {
+        note.textContent = "After placing the order, you will be asked to tap your card.";
+      } else {
+        note.textContent = "Cash orders continue directly to the order status page.";      }
     }
 
     function loadCheckout() {
@@ -293,7 +312,6 @@
 
         hiddenInputs.innerHTML += `
           <input type="hidden" name="quantity_${name}" value="${item.quantity}">
-          <input type="hidden" name="price_${name}" value="${item.price}">
         `;
       });
 
@@ -302,18 +320,50 @@
       grandTotalEl.textContent = `${subtotal} lei`;
     }
 
-    document.getElementById("checkout-form").addEventListener("submit", function(e) {
+    document.getElementById("checkout-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
       const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+      const placeBtn = document.getElementById("place-btn");
 
       if (Object.keys(cart).length === 0) {
-        e.preventDefault();
         alert("Your cart is empty.");
-      } else {
+        return;
+      }
+
+      placeBtn.disabled = true;
+      placeBtn.textContent = "Processing...";
+
+      const formData = new FormData(this);
+
+      try {
+        const response = await fetch("/place_order", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          alert(result.error || "Something went wrong.");
+          placeBtn.disabled = false;
+          placeBtn.textContent = "Place Order";
+          return;
+        }
+
         localStorage.removeItem("cart");
+        window.location.href = result.redirect_url;
+
+      } catch (error) {
+        console.error(error);
+        alert("Could not place order.");
+        placeBtn.disabled = false;
+        placeBtn.textContent = "Place Order";
       }
     });
 
     loadCheckout();
+    selectPayment("Card", document.querySelector(".payment-card.active"));
   </script>
 </body>
 </html>

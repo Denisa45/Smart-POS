@@ -92,16 +92,15 @@
 
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 20px;
     }
 
     .product-card {
       background: #f8f4e4;
       border: 2px solid #ceb98d;
       border-radius: 28px;
-      padding: 18px;
-      min-height: 220px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -113,43 +112,31 @@
       transform: translateY(-4px);
     }
 
-    .product-illustration {
-      font-size: 4rem;
-      text-align: center;
-      margin-bottom: 8px;
+    .product-image-wrap {
+      width: 100%;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fffbee;
     }
 
-    .product-name {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      text-align: center;
-    }
-
-    .product-desc {
-      font-size: 0.95rem;
-      color: #9a7b5f;
-      text-align: center;
-      margin-bottom: 10px;
-      min-height: 40px;
+    .product-image-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      border-radius: 18px;
     }
 
     .product-footer {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .price {
-      font-size: 1.2rem;
-      font-weight: 700;
+      justify-content: center;
+      margin-top: 14px;
     }
 
     .add-btn {
       border: none;
       border-radius: 999px;
-      padding: 10px 16px;
+      padding: 12px 18px;
       background: #7dbb6d;
       color: white;
       font-size: 1rem;
@@ -287,14 +274,12 @@
         <div class="products-grid">
           {% for item in menu_items %}
             <div class="product-card">
-              <div>
-                <div class="product-illustration">{{ item.emoji }}</div>
-                <div class="product-name">{{ item.name }}</div>
-                <div class="product-desc">{{ item.description }}</div>
+              <div class="product-image-wrap">
+                <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}">
               </div>
+
               <div class="product-footer">
-                <div class="price">{{ item.price }} lei</div>
-                <button class="add-btn" onclick="addToCart('{{ item.name|escape }}', {{ item.price }})">
+                <button class="add-btn" onclick="addToCart({{ item.name|tojson }}, {{ item.price }})">
                   Add +
                 </button>
               </div>

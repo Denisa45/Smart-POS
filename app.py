@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from services.firebase_config import db
+from services.card_service import process_card_payment
 from datetime import datetime
 import uuid
 from data import MENU_ITEMS, PRODUCTS, PREP_TIMES
@@ -131,13 +132,13 @@ def client_order(order_id):
                     "remaining_time": remaining_time,
                     "status": status,
                     "payment_method": order_data.get("payment_method", "Unknown"),
+                    "payment_status": order_data.get("payment_status", "Unknown"),
                     "time": order_data.get("time", "Unknown")
                 }
                 set_ready_led(status == "ready")
                 return render_template("client_order.html", order=order)
     set_ready_led(False)
     return "Order not found", 404
-
 @app.route("/place_order", methods=["POST"])
 def place_order():
     try:
@@ -158,7 +159,7 @@ def place_order():
         payment_method = request.form.get("payment_method", "Card")
 
         if not selected_products:
-            return "No products selected", 400
+            return jsonify({"success": False, "error": "No products selected"}), 400
 
         readings = db.child("orders").get().val()
         display_number = 1
@@ -174,12 +175,15 @@ def place_order():
         order_id = str(uuid.uuid4())[:8]
         created_at = datetime.now().isoformat()
 
+        payment_status = "paid" if payment_method == "Cash" else "waiting"
+
         order_data = {
             "order_id": order_id,
             "display_number": display_number,
             "products": selected_products,
             "total": total,
             "payment_method": payment_method,
+            "payment_status": payment_status,
             "estimated_time": estimated_time,
             "created_at": created_at,
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -188,10 +192,80 @@ def place_order():
         db.child("orders").push(order_data)
         set_ready_led(False)
 
-        return redirect(url_for("client_order", order_id=order_id))
+        if payment_method == "Card":
+            return jsonify({
+                "success": True,
+                "order_id": order_id,
+                "redirect_url": url_for("card_payment_page", order_id=order_id)
+            })
+
+        return jsonify({
+            "success": True,
+            "order_id": order_id,
+            "redirect_url": url_for("client_order", order_id=order_id)
+        })
 
     except Exception as e:
-        return f"Error placing order: {e}", 500
+        return jsonify({"success": False, "error": str(e)}), 500    return jsonify({"success": False, "error": str(e)}), 500
+ @app.route("/card_payment/<order_id>")
+def card_payment_page(order_id):
+    return render_template("card_payment.html", order_id=order_id)
 
+
+@app.route("/check_card_payment/<order_id>", methods=["POST"])
+def check_card_payment(order_id):
+    try:
+        readings = db.child("orders").get().val()
+        target_key = None
+        target_order = None
+
+        if readings:
+            for firebase_key, order_data in readings.items():
+                if order_data.get("order_id") == order_id:
+                    target_key = firebase_key
+                    target_order = order_data
+                    break
+
+        if not target_order:
+            return jsonify({"success": False, "error": "Order not found"}), 404
+
+        if target_order.get("payment_status") == "paid":
+            return jsonify({
+                "success": True,
+                "paid": True,
+                "redirect_url": url_for("client_order", order_id=order_id)
+            })
+
+        uid = read_card_uid()
+
+        if not uid:
+            return jsonify({"success": False, "error": "No card detected"}), 400
+
+        total = target_order.get("total", 0)
+        ok, message, new_balance = process_card_payment(uid, total)
+
+        if not ok:
+            return jsonify({
+                "success": False,
+                "error": message,
+                "balance": new_balance
+            }), 400
+
+        db.child("orders").child(target_key).update({
+            "payment_status": "paid",
+            "card_uid": uid
+        })
+
+        return jsonify({
+            "success": True,
+            "paid": True,
+            "message": message,
+            "new_balance": new_balance,
+            "redirect_url": url_for("client_order", order_id=order_id)
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

@@ -1,4 +1,4 @@
-from firebase_config import db
+from services.firebase_config import db
 
 def get_card(uid):
     return db.child("cards").child(str(uid)).get().val()
