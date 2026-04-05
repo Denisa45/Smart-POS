@@ -5,7 +5,7 @@ import webbrowser
 from data import products, prep_times
 from firebase_config import db
 from order_logic import build_order_data
-from card_service import process_card_payment
+from card_service import process_card_payment, add_balance
 from rfid_reader import read_card_uid
 
 order = {}
@@ -59,16 +59,21 @@ def remove_selected():
 
 def checkout():
     if not order:
-        messagebox.showinfo("Checkout", "Cart is empty")
+        messagebox.showwarning("Checkout", "Cart is empty")
         return
 
     payment_method = payment_var.get()
     total = sum(products[p] * q for p, q in order.items())
+    uid = None
 
     try:
         if payment_method == "Card":
             messagebox.showinfo("Card Payment", "Apropie cardul")
             uid = read_card_uid()
+
+            if not uid:
+                messagebox.showerror("Eroare", "Cardul nu a putut fi citit.")
+                return
 
             success, message, balance = process_card_payment(uid, total)
 
@@ -78,7 +83,7 @@ def checkout():
 
             messagebox.showinfo(
                 "Succes",
-                f"{message}\nSold rămas: {balance} lei"
+                f"{message}\nSold ramas: {balance} lei"
             )
 
         data = build_order_data(order, products, prep_times, payment_method, db)
@@ -247,5 +252,98 @@ checkout_btn = tk.Button(
     command=checkout
 )
 checkout_btn.pack(side="left", padx=10)
+def top_up_card():
+    try:
+        messagebox.showinfo("Top Up", "Apropie cardul pentru incarcare")
 
+        uid = read_card_uid()
+
+        topup_window = tk.Toplevel(root)
+        topup_window.title("Top Up Card")
+        topup_window.geometry("300x180")
+        topup_window.configure(bg=BG_CARD)
+
+        tk.Label(
+            topup_window,
+            text=f"Card UID: {uid}",
+            font=("Arial", 11),
+            bg=BG_CARD,
+            fg=TEXT_DARK
+        ).pack(pady=10)
+
+        tk.Label(
+            topup_window,
+            text="Suma de incarcat:",
+            font=("Arial", 12, "bold"),
+            bg=BG_CARD,
+            fg=TEXT_DARK
+        ).pack(pady=5)
+
+        amount_entry = tk.Entry(topup_window, font=("Arial", 12))
+        amount_entry.pack(pady=5)
+
+        def confirm_topup():
+            try:
+                amount = float(amount_entry.get())
+
+                if amount <= 0:
+                    messagebox.showerror("Eroare", "Introdu o suma valida.")
+                    return
+
+                success, message, new_balance = add_balance(uid, amount)
+
+                if success:
+                    messagebox.showinfo(
+                        "Succes",
+                        f"{message}\nSold curent: {new_balance} lei"
+                    )
+                    topup_window.destroy()
+                else:
+                    messagebox.showerror("Eroare", message)
+
+            except ValueError:
+                messagebox.showerror("Eroare", "Introdu un numar valid.")
+
+        tk.Button(
+            topup_window,
+            text="Confirma",
+            font=("Arial", 12, "bold"),
+            bg=BTN_CHECKOUT,
+            fg=TEXT_LIGHT,
+            relief="flat",
+            bd=0,
+            padx=12,
+            pady=8,
+            command=confirm_topup
+        ).pack(pady=15)
+
+    except Exception as e:
+        messagebox.showerror("Top Up Error", str(e))
+topup_btn = tk.Button(
+    buttons_frame,
+    text="Top Up Card",
+    font=("Arial", 12, "bold"),
+    bg="#f59e0b",
+    fg=TEXT_LIGHT,
+    activebackground="#d97706",
+    activeforeground=TEXT_LIGHT,
+    relief="flat",
+    bd=0,
+    padx=18,
+    pady=10,
+    command=top_up_card
+)
+topup_btn.pack(side="left", padx=10)
 root.mainloop()
+
+def close_app():
+    root.destroy()
+
+exit_btn = tk.Button(
+    root,
+    text="Exit",
+    command=close_app,
+    bg="#ef4444",
+    fg="white"
+)
+exit_btn.place(x=10, y=10)

@@ -87,11 +87,59 @@
             font-weight: bold;
             color: #7c3aed;
         }
+        stats-container {
+            max-width: 1000px;
+            margin: 0 auto 30px auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .stat-card p {
+            margin: 10px 0 0 0;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f2937;
+        }
     </style>
 </head>
 <body>
     <h1>Smart POS Kiosk Orders</h1>
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3>Total Orders</h3>
+            <p>{{ stats.total_orders }}</p>
+        </div>
 
+        <div class="stat-card">
+            <h3>Total Revenue</h3>
+            <p>{{ stats.total_revenue }} lei</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Ready Orders</h3>
+            <p>{{ stats.ready_orders }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Card Payments</h3>
+            <p>{{ stats.card_payments }}</p>
+        </div>
+    </div>
     <div class="orders-container">
         {% if orders %}
             {% for order in orders %}
