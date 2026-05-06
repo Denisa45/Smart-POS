@@ -1,0 +1,6 @@
+
+def get_card_by_uid(uid):
+def get_balance(uid):
+def has_sufficient_funds(uid, amount):
+def deduct_balance(uid, amount):
+def process_card_payment(uid, amount):

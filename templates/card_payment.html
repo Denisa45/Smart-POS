@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tap Your Card</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #e8e2b8;
+      font-family: "Segoe UI", sans-serif;
+      color: #7b5a3d;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 36px;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(123, 90, 61, 0.08);
+    }
+
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 12px 0;
+      font-size: 2.2rem;
+    }
+
+    p {
+      margin: 0 0 12px 0;
+      color: #9a7b5f;
+      font-size: 1.05rem;
+    }
+
+    .status {
+      margin-top: 18px;
+      font-weight: 700;
+      color: #7dbb6d;
+    }
+
+    .error {
+      margin-top: 18px;
+      color: #b45309;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">💳</div>
+    <h1>Tap your card</h1>
+    <p>Hold your RFID card near the reader to confirm payment.</p>
+    <div class="status" id="status">Waiting for card...</div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    const orderId = "{{ order_id }}";
+    let isChecking = false;
+
+    async function checkCard() {
+      if (isChecking) return;
+      isChecking = true;
+
+      document.getElementById("error").textContent = "";
+
+      try {
+        const response = await fetch(`/check_card_payment/${orderId}`, {
+          method: "POST"
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.paid) {
+          document.getElementById("status").textContent = "Payment successful!";
+          setTimeout(() => {
+            window.location.href = result.redirect_url;
+          }, 800);
+          return;
+        }
+
+        if (result.error) {
+          document.getElementById("error").textContent = result.error;
+        }
+      } catch (error) {
+        document.getElementById("error").textContent = "Reader check failed.";
+      } finally {
+        isChecking = false;
+      }
+    }
+
+    setInterval(checkCard, 2000);
+  </script>
+</body>
+</html>

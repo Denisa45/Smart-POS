@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="3">
+    <title>Smart POS Orders</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+
+        .orders-container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        .order-card h2 {
+            margin-top: 0;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .order-card p {
+            margin: 8px 0;
+            color: #374151;
+        }
+
+        ul {
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-preparing {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-ready {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-unknown {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .remaining {
+            font-weight: bold;
+            color: #7c3aed;
+        }
+
+        stats-container {
+            max-width: 1000px;
+            margin: 0 auto 30px auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .stat-card p {
+            margin: 10px 0 0 0;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Smart POS Kiosk Orders</h1>
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3>Total Orders</h3>
+            <p>{{ stats.total_orders }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Revenue</h3>
+            <p>{{ stats.total_revenue }} lei</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Ready Orders</h3>
+            <p>{{ stats.ready_orders }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Card Payments</h3>
+            <p>{{ stats.card_payments }}</p>
+        </div>
+    </div>
+    <div class="orders-container">
+        {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <h2>Order #{{ order.display_number }}</h2>
+
+            <p><strong>Time:</strong> {{ order.time }}</p>
+            <p><strong>Total:</strong> {{ order.total }} lei</p>
+            <p><strong>Payment:</strong> {{ order.payment_method }}</p>
+            <p><strong>Estimated time:</strong> {{ order.estimated_time }} sec</p>
+
+            <p>
+                <strong>Status:</strong>
+                <span class="status status-{{ order.status }}">
+                    {% if order.status == "pending" %}
+                    ⏳ pending
+                    {% elif order.status == "preparing" %}
+                    🍳 preparing
+                    {% elif order.status == "ready" %}
+                    ✅ ready
+                    {% else %}
+                    ❔ unknown
+                    {% endif %}
+                </span>
+            </p>
+            <p>
+                <strong>Remaining time:</strong>
+                <span class="remaining">
+                    {{ order.remaining_time }} sec
+                </span>
+            </p>
+
+            <p><strong>Products:</strong></p>
+            <ul>
+                {% for product, quantity in order.products.items() %}
+                <li>{{ product }} x {{ quantity }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="empty">No orders yet.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>
+
+<script>
+    async function checkState() {
+        const res = await fetch("/get_state");
+        const data = await res.json();
+
+        if (data.state === "waiting_face") {
+            window.location.href = "/start";
+        }
+
+        if (data.state === "member_detected") {
+            showWelcome(data.user_id);
+            loadMenu();
+        }
+    }
+
+    setInterval(checkState, 2000);
+</script>
