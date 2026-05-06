@@ -4,3 +4,13 @@ ai_env/
 venv/ 
 __pycache__/ 
 *.pyc 
+# Firebase secrets
+serviceAccountKey.json
+*-adminsdk-*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# venv
+ai_env/
