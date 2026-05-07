@@ -4,6 +4,7 @@ reader = SimpleMFRC522()
 
 def read_card_uid():
     try:
+        reader = SimpleMFRC522()
         card_id, text = reader.read()
         return str(card_id)
     except Exception as e:

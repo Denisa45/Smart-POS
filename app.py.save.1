@@ -18,7 +18,7 @@ import time
 
 
 
-from data import MENU_ITEMS, PRODUCTS, PREP_TIMES
+from data import MENU_ITEMS, PRODUCTS, 
 
 
 
@@ -27,8 +27,6 @@ from services.fb_listener import listen_orders
 import threading
 
 
-
-threading.Thread(target=listen_orders, daemon=True).start()
 
 
 
@@ -250,8 +248,6 @@ def client_order(order_id):
 
 
 
-                set_ready_led(status == "ready")
-
 
 
                 return render_template("client_order.html", order={
@@ -376,8 +372,6 @@ def place_order():
 
         db.child("orders").push(order_data)
 
-        set_ready_led(False)
-
 
 
         if payment_method == "Card":
@@ -419,33 +413,7 @@ def place_order():
 # CARD PAYMENT PAGE
 
 # -------------------------
-def rfid_loop():
-    print("[RFID] Loop started")
 
-    while True:
-        try:
-            uid = read_card_uid()
-
-            if uid:
-                print("[RFID] Card detected:", uid)
-
-                # store last scanned card in Firebase
-                db.child("last_card").set({
-                    "uid": uid,
-                    "timestamp": time.time()
-                })
-
-                # optional LED blink
-                set_ready_led(True)
-                time.sleep(0.2)
-                set_ready_led(False)
-
-                time.sleep(2)  # debounce (VERY important)
-
-        except Exception as e:
-            print("[RFID ERROR]", e)
-
-        time.sleep(0.5)
 @app.route("/card_payment/<order_id>")
 
 def card_payment_page(order_id):
@@ -612,8 +580,6 @@ def face_login():
 
 
 
-            set_ready_led(True)
-
 
 
             return jsonify({
@@ -644,7 +610,7 @@ def face_login():
 
 
 
-        db.child("current_session").set(session)
+        
 
         set_ready_led(True)
 
@@ -689,12 +655,25 @@ def get_state():
 # -------------------------
 
 if __name__ == "__main__":
+
+    from services.fb_listener import listen_orders
+
+
+
     threading.Thread(target=listen_orders, daemon=True).start()
-    threading.Thread(target=rfid_loop, daemon=True).start()   # 👈 ADD THIS
+
+
 
     app.run(
+
         host="0.0.0.0",
+
         port=5000,
+
         debug=True,
+
         use_reloader=False
+
     )
+
+

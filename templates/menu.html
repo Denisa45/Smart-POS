@@ -279,9 +279,10 @@
               </div>
 
               <div class="product-footer">
-                <button class="add-btn" onclick="addToCart({{ item.name|tojson }}, {{ item.price }})">
-                  Add +
-                </button>
+                <button class="add-btn"
+        onclick='addToCart({{ item.name|tojson }}, {{ item.price|tojson }})'>
+  Add +
+</button>
               </div>
             </div>
           {% endfor %}
