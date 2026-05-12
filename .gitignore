@@ -1,4 +1,21 @@
+# Python cache
 __pycache__/
+*.pyc
+
+# Virtual environment
+ai_env/
+
+# Firebase secrets (VERY IMPORTANT)
+serviceAccountKey.json
+iot-kiosk-pos-firebase-adminsdk*.json
+
+# ML / AI models
+*.pkl
+
+# Images (if not needed in git)
+*.jpg
+*.jpeg
+*.png__pycache__/
 *.pyc
 ai_env/ 
 venv/ 
