@@ -4,105 +4,275 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Denisa's Special</title>
-
 <style>
-body {
-    margin: 0;
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
     height: 100vh;
     background: #e9e3b4;
     display: flex;
     justify-content: center;
     align-items: center;
     font-family: 'Segoe UI', sans-serif;
-}
-
-.container {
-    text-align: center;
-}
-
-.title {
-    font-size: 48px;
     color: #7a5c3e;
-    margin-bottom: 30px;
+    overflow: hidden;
+  }
+
+  #waiting {
+    text-align: center;
+    transition: opacity 0.5s;
+  }
+
+  #waiting .title {
+    font-size: 48px;
     font-weight: bold;
-}
+    margin-bottom: 24px;
+  }
 
-/* Sandwich image */
-.sandwich {
-    width: 300px;
+  #waiting .sandwich {
+    width: 260px;
     animation: float 3s ease-in-out infinite;
-}
+  }
 
-/* Floating animation */
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
-}
+  #waiting .hint {
+    margin-top: 28px;
+    font-size: 18px;
+    color: #9a7a5a;
+    animation: pulse 2s ease-in-out infinite;
+  }
 
-/* Button */
-button {
-    margin-top: 40px;
-    padding: 16px 40px;
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-14px); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  #welcome {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    padding: 32px;
+    max-width: 640px;
+    width: 100%;
+  }
+
+  #welcome.visible {
+    display: flex;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .greeting {
+    font-size: 42px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+
+  .greeting span { color: #5a9e48; }
+
+  .points-badge {
+    background: #7bbf6a;
+    color: white;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .recs-label {
+    font-size: 16px;
+    color: #9a7a5a;
+    margin-bottom: -8px;
+  }
+
+  .recs {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .rec-card {
+    background: #f8f4e4;
+    border: 2px solid #ceb98d;
+    border-radius: 22px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+    min-width: 130px;
+  }
+
+  .rec-card:hover {
+    transform: translateY(-3px);
+    background: #fff8e8;
+  }
+
+  .rec-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .rec-times {
+    font-size: 13px;
+    color: #9a7a5a;
+  }
+
+  .cta {
+    margin-top: 8px;
+    padding: 16px 44px;
     font-size: 20px;
     border-radius: 30px;
     border: none;
     background: #7bbf6a;
     color: white;
     cursor: pointer;
-    transition: 0.2s;
-}
+    font-weight: 700;
+    transition: transform 0.15s, background 0.15s;
+  }
 
-button:hover {
-    transform: scale(1.05);
-    background: #6aa85b;
-}
-.admin-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
+  .cta:hover {
+    transform: scale(1.04);
+    background: #6aae5a;
+  }
 
+  .guest-note {
+    font-size: 16px;
+    color: #9a7a5a;
+  }
+
+  .admin-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
     background: rgba(255,255,255,0.3);
     border: none;
     padding: 8px 14px;
     border-radius: 999px;
-
     font-size: 12px;
     color: #7b5a3d;
     cursor: pointer;
-
     opacity: 0.5;
-    transition: 0.2s;
-}
+    transition: opacity 0.2s;
+  }
 
-.admin-btn:hover {
-    opacity: 1;
-    background: rgba(255,255,255,0.6);
-}
-.admin-hidden {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 60px;
-    height: 60px;
-    cursor: pointer;
-}
+  .admin-btn:hover { opacity: 1; }
 </style>
 </head>
-
 <body>
-<button class="admin-btn" onclick="window.location.href='/dashboard'">
-    Admin
-</button><div class="container">
-    <div class="title">Denisa’s Special</div>
 
-    <img src="{{ url_for('static', filename='sandwich.png') }}" class="sandwich">
-    <br>
+<button class="admin-btn" onclick="window.location.href='/dashboard'">Admin</button>
 
-    <button onclick="window.location.href='/menu'">
-        Tap to Start
-    </button>
+<div id="waiting">
+  <div class="title">Denisa's Special</div>
+  <img src="{{ url_for('static', filename='sandwich.png') }}" class="sandwich">
+  <div class="hint">Look at the camera or tap your card</div>
 </div>
 
+<div id="welcome"></div>
+
+<script>
+  const MENU_ITEMS = {{ menu_items | tojson }};
+  let polling = true;
+
+  async function checkState() {
+    if (!polling) return;
+    try {
+      const res = await fetch("/get_state");
+      const data = await res.json();
+      if (data.state === "logged_in") {
+        polling = false;
+        await showWelcome(data);
+      }
+    } catch (e) {}
+  }
+
+  async function showWelcome(stateData) {
+    let recs = [];
+    let bonusPoints = 0;
+    const sessionType = stateData.session_type;
+    const userId = stateData.user;
+
+    try {
+      const r = await fetch("/get_recommendations");
+      const d = await r.json();
+      if (d.success) {
+        recs = d.recommendations;
+        bonusPoints = d.bonus_points || 0;
+      }
+    } catch (e) {}
+
+    const welcome = document.getElementById("welcome");
+    const isMember = sessionType === "member" && userId && userId !== "guest";
+    let html = "";
+
+    if (isMember) {
+      const name = userId.charAt(0).toUpperCase() + userId.slice(1);
+      html += `<div class="greeting">Hey, <span>${name}</span>! 👋</div>`;
+      if (bonusPoints > 0) {
+        html += `<div class="points-badge">⭐ ${bonusPoints} bonus points</div>`;
+      }
+      if (recs.length > 0) {
+        html += `<div class="recs-label">Your usual picks</div><div class="recs">`;
+        for (const rec of recs) {
+          html += `
+                <div class="rec-card" data-name="${rec.name}">
+                <div class="rec-name">${rec.name}</div>
+              <div class="rec-times">ordered ${rec.times}×</div>
+            </div>`;
+        }
+        html += `</div>`;
+      }
+    } else {
+      html += `<div class="greeting">Welcome! 👋</div>`;
+      html += `<div class="guest-note">Browsing as guest</div>`;
+    }
+
+    html += `<button class="cta" onclick="goToMenu()">See full menu →</button>`;
+    welcome.innerHTML = html;
+
+    document.getElementById("waiting").style.display = "none";
+    welcome.classList.add("visible");
+    setTimeout(() => {
+    document.querySelectorAll(".rec-card").forEach(card => {
+          card.addEventListener("click", () => {
+            addToCartAndGo(card.dataset.name);
+          });
+        });
+      }, 50);
+
+    // Auto-go to menu after 15s if idle
+    setTimeout(goToMenu, 15000);
+  }
+
+  function addToCartAndGo(name) {
+    const item = MENU_ITEMS.find(i => i.name === name);
+    if (!item) { goToMenu(); return; }
+    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+    if (!cart[name]) cart[name] = { price: item.price, quantity: 0 };
+    cart[name].quantity += 1;
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.location.href = "/menu";
+  }
+
+  function goToMenu() {
+    window.location.href = "/menu";
+  }
+
+  setInterval(checkState, 1000);
+  window.addToCart = addToCart;
+window.changeQty = changeQty;
+window.renderCart = renderCart;
+</script>
 </body>
 </html>

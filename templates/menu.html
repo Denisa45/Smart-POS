@@ -339,44 +339,60 @@
     }
 
     function renderCart() {
-      const cartItems = document.getElementById("cart-items");
-      const cartTotal = document.getElementById("cart-total");
+  const cartItems = document.getElementById("cart-items");
+  const cartTotal = document.getElementById("cart-total");
 
-      cartItems.innerHTML = "";
-      let total = 0;
+  cartItems.innerHTML = "";
+  let total = 0;
 
-      const entries = Object.entries(cart);
+  const entries = Object.entries(cart);
 
-      if (entries.length === 0) {
-        cartItems.innerHTML = '<div class="empty-cart">Nothing here yet.</div>';
-        cartTotal.textContent = "Total: 0 lei";
-        return;
-      }
+  if (entries.length === 0) {
+    cartItems.innerHTML = '<div class="empty-cart">Nothing here yet.</div>';
+    cartTotal.textContent = "Total: 0 lei";
+    return;
+  }
 
-      entries.forEach(([name, item]) => {
-        total += item.price * item.quantity;
+  entries.forEach(([name, item]) => {
+    total += item.price * item.quantity;
 
-        const row = document.createElement("div");
-        row.className = "cart-item";
+    const row = document.createElement("div");
+    row.className = "cart-item";
 
-        row.innerHTML = `
-          <div>
-            <div class="cart-item-name">${name}</div>
-            <div>${item.price} lei</div>
-          </div>
-          <div class="qty-controls">
-            <button class="qty-btn" onclick="changeQty(${JSON.stringify(name)}, -1)">−</button>
-            <span>${item.quantity}</span>
-            <button class="qty-btn" onclick="changeQty(${JSON.stringify(name)}, 1)">+</button>
-          </div>
-        `;
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div class="cart-item-name">${name}</div>
+      <div>${item.price} lei</div>
+    `;
 
-        cartItems.appendChild(row);
-      });
+    const controls = document.createElement("div");
+    controls.className = "qty-controls";
 
-      cartTotal.textContent = `Total: ${total} lei`;
-    }
+    const minus = document.createElement("button");
+    minus.className = "qty-btn";
+    minus.textContent = "-";
+    minus.onclick = () => changeQty(name, -1);
 
+    const qty = document.createElement("span");
+    qty.textContent = item.quantity;
+
+    const plus = document.createElement("button");
+    plus.className = "qty-btn";
+    plus.textContent = "+";
+    plus.onclick = () => changeQty(name, 1);
+
+    controls.appendChild(minus);
+    controls.appendChild(qty);
+    controls.appendChild(plus);
+
+    row.appendChild(left);
+    row.appendChild(controls);
+
+    cartItems.appendChild(row);
+  });
+
+  cartTotal.textContent = `Total: ${total} lei`;
+}
     renderCart();
   </script>
 </body>
