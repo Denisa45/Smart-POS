@@ -16,7 +16,7 @@ def get_valid_session(db, timeout=10):
         return None
 
     if time.time() - session.get("timestamp", 0) > timeout:
-        db.child("current_session").delete()
+        db.child("current_session").remove()
         return None
 
     return session

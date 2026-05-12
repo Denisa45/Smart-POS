@@ -28,7 +28,9 @@ import threading
 
 
 
-threading.Thread(target=listen_orders, daemon=True).start()
+#threading.Thread(target=listen_orders, daemon=True).start()
+from core.startup import start_background_services
+
 
 
 
@@ -419,33 +421,35 @@ def place_order():
 # CARD PAYMENT PAGE
 
 # -------------------------
-def rfid_loop():
-    print("[RFID] Loop started")
+# ~ def rfid_loop():
+    # ~ print("[RFID] Loop started")
 
-    while True:
-        try:
-            uid = read_card_uid()
+    # ~ while True:
+        # ~ try:
+            # ~ uid = read_card_uid()
 
-            if uid:
-                print("[RFID] Card detected:", uid)
+            # ~ if uid:
+                # ~ print("[RFID] Card detected:", uid)
 
-                # store last scanned card in Firebase
-                db.child("last_card").set({
-                    "uid": uid,
-                    "timestamp": time.time()
-                })
+                # ~ # store last scanned card in Firebase
+                # ~ db.child("last_card").set({
+                    # ~ "uid": uid,
+                    # ~ "timestamp": time.time()
+                # ~ })
 
-                # optional LED blink
-                set_ready_led(True)
-                time.sleep(0.2)
-                set_ready_led(False)
+                # ~ # optional LED blink
+                # ~ set_ready_led(True)
+                # ~ time.sleep(0.2)
+                # ~ set_ready_led(False)
 
-                time.sleep(2)  # debounce (VERY important)
+                # ~ time.sleep(2)  # debounce (VERY important)
 
-        except Exception as e:
-            print("[RFID ERROR]", e)
+        # ~ except Exception as e:
+            # ~ print("[RFID ERROR]", e)
 
-        time.sleep(0.5)
+        # ~ time.sleep(0.5)
+        
+        
 @app.route("/card_payment/<order_id>")
 
 def card_payment_page(order_id):
@@ -689,8 +693,9 @@ def get_state():
 # -------------------------
 
 if __name__ == "__main__":
-    threading.Thread(target=listen_orders, daemon=True).start()
-    threading.Thread(target=rfid_loop, daemon=True).start()   # 👈 ADD THIS
+    #threading.Thread(target=listen_orders, daemon=True).start()
+    #threading.Thread(target=rfid_loop, daemon=True).start()   # 👈 ADD THIS
+    start_background_services()
 
     app.run(
         host="0.0.0.0",
