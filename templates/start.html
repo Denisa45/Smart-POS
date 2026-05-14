@@ -182,7 +182,7 @@
 <div id="welcome"></div>
 
 <script>
-  const MENU_ITEMS = {{ menu_items | tojson }};
+  const PRODUCTS = {{ menu_items | tojson }};
   let polling = true;
 
   async function checkState() {
@@ -196,83 +196,104 @@
       }
     } catch (e) {}
   }
-
-  async function showWelcome(stateData) {
+async function showWelcome(stateData) {
     let recs = [];
     let bonusPoints = 0;
+    let aiPitch = "";
+    let loyaltyDeal = "";
+    
     const sessionType = stateData.session_type;
     const userId = stateData.user;
 
+    // 1. Fetch the Gemini-powered recommendations
     try {
-      const r = await fetch("/get_recommendations");
-      const d = await r.json();
-      if (d.success) {
-        recs = d.recommendations;
-        bonusPoints = d.bonus_points || 0;
-      }
-    } catch (e) {}
+        const r = await fetch("/get_recommendations");
+        const d = await r.json();
+        if (d.success) {
+            recs = d.recommendations; // These now contain discounted prices if Gemini chose so
+            bonusPoints = d.bonus_points || 0;
+            aiPitch = d.pitch || "";      // Gemini's friendly pitch
+            loyaltyDeal = d.loyalty_deal || ""; // Gemini's points suggestion
+        }
+    } catch (e) { console.error("Rec error:", e); }
 
     const welcome = document.getElementById("welcome");
     const isMember = sessionType === "member" && userId && userId !== "guest";
     let html = "";
 
     if (isMember) {
-      const name = userId.charAt(0).toUpperCase() + userId.slice(1);
-      html += `<div class="greeting">Hey, <span>${name}</span>! 👋</div>`;
-      if (bonusPoints > 0) {
-        html += `<div class="points-badge">⭐ ${bonusPoints} bonus points</div>`;
-      }
-      if (recs.length > 0) {
-        html += `<div class="recs-label">Your usual picks</div><div class="recs">`;
-        for (const rec of recs) {
-          html += `
-                <div class="rec-card" data-name="${rec.name}">
-                <div class="rec-name">${rec.name}</div>
-              <div class="rec-times">ordered ${rec.times}×</div>
+        const name = userId.charAt(0).toUpperCase() + userId.slice(1);
+        html += `<div class="greeting">Hey, <span>${name}</span>! ??</div>`;
+        
+        // AI PITCH BUBBLE
+        if (aiPitch) {
+            html += `
+            <div style="background: #fffbee; border: 2px dashed #7bbf6a; border-radius: 20px; padding: 15px; margin: 10px 0; font-style: italic; color: #4a6b3d;">
+                " ${aiPitch} "
             </div>`;
         }
-        html += `</div>`;
-      }
+
+        // LOYALTY DEAL / BONUS POINTS
+        if (loyaltyDeal) {
+            html += `<div class="points-badge" style="background: #efad4d; margin-bottom: 10px;">?? ${loyaltyDeal}</div>`;
+        } else if (bonusPoints > 0) {
+            html += `<div class="points-badge">? ${bonusPoints} bonus points</div>`;
+        }
+
+        // RECOMMENDATIONS
+        if (recs.length > 0) {
+            html += `<div class="recs-label">Recommended for you</div><div class="recs">`;
+            for (const rec of recs) {
+                // Find the key for this product in your PRODUCTS object
+                const pKey = Object.keys(PRODUCTS).find(k => PRODUCTS[k].name === rec.name) || rec.name.toLowerCase().replace(/ /g,"_");
+                
+                // Highlight if there is a discount
+                const priceHtml = rec.is_discounted 
+                    ? `<span style="text-decoration: line-through; color: red; font-size: 0.8em;">${PRODUCTS[pKey].price}</span> ${rec.price} lei`
+                    : `${rec.price} lei`;
+
+                html += `
+                <div class="rec-card" onclick="addToCartAndGo('${pKey}', ${rec.price})">
+                    <div class="rec-name">${rec.name}</div>
+                    <div class="rec-times" style="font-weight: bold; color: #5a9e48;">${priceHtml}</div>
+                </div>`;
+            }
+            html += `</div>`;
+        }
     } else {
-      html += `<div class="greeting">Welcome! 👋</div>`;
-      html += `<div class="guest-note">Browsing as guest</div>`;
+        html += `<div class="greeting">Welcome! ??</div>`;
+        html += `<div class="guest-note">Browsing as guest</div>`;
     }
 
-    html += `<button class="cta" onclick="goToMenu()">See full menu →</button>`;
+    html += `<button class="cta" onclick="goToMenu()">See full menu ?</button>`;
     welcome.innerHTML = html;
 
     document.getElementById("waiting").style.display = "none";
     welcome.classList.add("visible");
-    setTimeout(() => {
-    document.querySelectorAll(".rec-card").forEach(card => {
-          card.addEventListener("click", () => {
-            addToCartAndGo(card.dataset.name);
-          });
-        });
-      }, 50);
-
-    // Auto-go to menu after 15s if idle
-    setTimeout(goToMenu, 15000);
-  }
-
-  function addToCartAndGo(name) {
-    const item = MENU_ITEMS.find(i => i.name === name);
+}
+function addToCartAndGo(id, customPrice = null) {
+    const item = PRODUCTS[id];
     if (!item) { goToMenu(); return; }
+
     const cart = JSON.parse(localStorage.getItem("cart") || "{}");
-    if (!cart[name]) cart[name] = { price: item.price, quantity: 0 };
-    cart[name].quantity += 1;
+    const finalPrice = customPrice !== null ? customPrice : item.price;
+
+    if (!cart[id]) {
+        cart[id] = {
+            name: item.name,
+            price: finalPrice,
+            quantity: 0
+        };
+    }
+
+    cart[id].quantity += 1;
     localStorage.setItem("cart", JSON.stringify(cart));
     window.location.href = "/menu";
-  }
-
-  function goToMenu() {
-    window.location.href = "/menu";
-  }
-
+}
   setInterval(checkState, 1000);
-  window.addToCart = addToCart;
-window.changeQty = changeQty;
-window.renderCart = renderCart;
+function goToMenu() {
+  window.location.href = "/menu";
+}
 </script>
 </body>
 </html>

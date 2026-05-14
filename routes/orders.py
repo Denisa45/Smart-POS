@@ -6,7 +6,7 @@ from services.firebase_config import db
 from services.card_service import process_card_payment
 from services.session_service import get_valid_session
 from services.hardware_service import set_ready_led
-from data import PRODUCTS, PREP_TIMES
+from services.firebase_service import get_products
 
 orders_bp = Blueprint("orders", __name__)
 
@@ -14,18 +14,26 @@ orders_bp = Blueprint("orders", __name__)
 @orders_bp.route("/place_order", methods=["POST"])
 def place_order():
     try:
+        products = get_products() or {}
+
         selected_products = {}
         total = 0
         estimated_time = 0
+        total_bonus = 0
 
         for key in request.form:
             if key.startswith("quantity_"):
-                product = key.replace("quantity_", "")
+                product_id = key.replace("quantity_", "")
                 qty = int(request.form.get(key, 0))
-                if qty > 0 and product in PRODUCTS:
-                    selected_products[product] = qty
-                    total += PRODUCTS[product] * qty
-                    estimated_time += PREP_TIMES.get(product, 0) * qty
+
+                if qty > 0 and product_id in products:
+                    item = products[product_id]
+
+                    selected_products[product_id] = qty
+
+                    total += item["price"] * qty
+                    estimated_time += item["prep_time"] * qty
+                    total_bonus += item.get("bonus_points", 0) * qty
 
         if not selected_products:
             return jsonify({"success": False, "error": "No products selected"}), 400
@@ -44,6 +52,7 @@ def place_order():
             "products": selected_products,
             "total": total,
             "estimated_time": estimated_time,
+            "earned_points": total_bonus,
             "payment_method": payment_method,
             "payment_status": payment_status,
             "created_at": now.isoformat(),
@@ -58,11 +67,16 @@ def place_order():
             if payment_method == "Card"
             else url_for("pages.client_order", order_id=order_id)
         )
-        return jsonify({"success": True, "order_id": order_id, "redirect_url": redirect})
+
+        return jsonify({
+            "success": True,
+            "order_id": order_id,
+            "redirect_url": redirect
+        })
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
+        
 
 @orders_bp.route("/check_card_payment/<order_id>", methods=["POST"])
 def check_card_payment(order_id):

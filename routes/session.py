@@ -11,36 +11,21 @@ session_bp = Blueprint("session", __name__)
 
 @session_bp.route("/face_login", methods=["POST"])
 def face_login():
-    """
-    Called by the laptop face recognition script via Firebase listener.
-    The laptop writes to current_session in Firebase, which triggers
-    on_face_login() in startup.py — this HTTP route is kept only as a
-    fallback for direct POST (e.g. testing from curl or Postman).
-    """
     try:
         data = request.get_json() or {}
         user_id = data.get("user_id")
-
         _handle_face_login(user_id)
-
         session = db.child("current_session").get().val() or {}
         return jsonify({"success": True, "session": session})
-
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 def _handle_face_login(user_id):
-    """
-    Shared logic used by both the HTTP route and the Firebase listener callback.
-    Looks up the member, enriches the session, updates kiosk state.
-    """
     if not user_id:
         db.child("current_session").set({
-            "user_id": None,
-            "type": "guest",
-            "status": "ready",
-            "timestamp": time.time()
+            "user_id": None, "type": "guest",
+            "status": "ready", "timestamp": time.time()
         })
         StateManager.set(KioskState.LOGGED_IN, user="guest")
         set_ready_led(True)
@@ -50,25 +35,22 @@ def _handle_face_login(user_id):
     member = db.child("members").child(user_id).get().val()
 
     if not member:
-        # Face recognized but not registered — treat as guest
         db.child("current_session").set({
-            "user_id": user_id,
-            "type": "guest",
-            "status": "ready",
-            "timestamp": time.time()
+            "user_id": user_id, "type": "guest",
+            "status": "ready", "timestamp": time.time()
         })
         StateManager.set(KioskState.LOGGED_IN, user="guest")
         set_ready_led(True)
         print(f"[SESSION] {user_id} not in members → guest")
         return
 
-    # Full member — store everything needed for suggestions + payment
     db.child("current_session").set({
         "user_id": user_id,
         "card_uid": str(member["card_uid"]),
         "type": "member",
         "status": "ready",
         "bonus_points": member.get("bonus_points", 0),
+        "preferences": member.get("preferences", {}),
         "timestamp": time.time()
     })
     StateManager.set(KioskState.LOGGED_IN, user=user_id)
@@ -78,17 +60,13 @@ def _handle_face_login(user_id):
 
 @session_bp.route("/get_state")
 def get_state():
-    """
-    Frontend polls this every second on start.html to know when
-    face login completed and it should redirect to /menu.
-    """
     state = db.child("current_state").get().val() or {}
     session = db.child("current_session").get().val() or {}
     return jsonify({
         "state": state.get("state", KioskState.WAITING_FACE),
         "user": state.get("user"),
-        "session_type": session.get("type"),        # "member" | "guest"
-        "card_uid": session.get("card_uid"),         # for suggestions later
+        "session_type": session.get("type"),
+        "card_uid": session.get("card_uid"),
         "bonus_points": session.get("bonus_points", 0)
     })
 
@@ -103,26 +81,87 @@ def logout():
 
 @session_bp.route("/get_recommendations")
 def get_recommendations():
-    """
-    Called by start.html after face login.
-    Returns member name + top products based on their order history.
-    """
-    from utils.recommendations import get_recommendations as compute_recs
+    from services.gemini_service import get_llm_recommendations
 
     session = db.child("current_session").get().val()
     if not session or session.get("type") != "member":
         return jsonify({"success": False, "recommendations": []})
 
-    card_uid = session.get("card_uid")
     user_id = session.get("user_id")
+    prefs = session.get("preferences", {})
+    all_products = db.child("products").get().val() or {}
 
-    orders = db.child("orders").get().val() or {}
-    recs = compute_recs(orders, card_uid, top_n=3)
+    member = db.child(f"members/{user_id}").get().val() or {}
+    member_name = member.get("name", user_id)
+
+    def is_allowed(product, user_diet):
+        product_diet = product.get("diet", [])
+        if not user_diet:
+            return True
+        if "vegetarian" in user_diet and "non_vegetarian" in product_diet:
+            return False
+        return True
+
+    safe_menu = {
+        p_id: {
+            "name": p.get("name"),
+            "price": p.get("price"),
+            "category": p.get("category"),
+            "meal_type": p.get("meal_type"),
+            "diet": p.get("diet")
+        }
+        for p_id, p in all_products.items()
+        if is_allowed(p, prefs.get("diet", []))
+    }
+
+    try:
+        ll_data = get_llm_recommendations(member_name, prefs, safe_menu)
+    except Exception as e:
+        print("LLM error:", e)
+        ll_data = {"top_ids": [], "pitch": "Welcome back!"}
+
+    final_recs = []
+    for p_id in ll_data.get("top_ids", []):
+        if p_id in all_products:
+            final_recs.append(all_products[p_id])
 
     return jsonify({
         "success": True,
-        "user_id": user_id,
-        "card_uid": card_uid,
-        "bonus_points": session.get("bonus_points", 0),
-        "recommendations": recs  # [{"name": "Coffee", "times": 5}, ...]
+        "pitch": ll_data.get("pitch", "Welcome back!"),
+        "recommendations": final_recs
     })
+
+
+# ← Previously this was incorrectly indented INSIDE get_recommendations
+@session_bp.route("/get_upsell", methods=["POST"])
+def get_upsell():
+    from services.gemini_service import get_upsell_pitch
+
+    data = request.get_json()
+    last_item_id = data.get("item_id")
+
+    all_products = db.child("products").get().val() or {}
+    session = db.child("current_session").get().val() or {}
+
+    product = all_products.get(last_item_id)
+    if not product or "pairs_with" not in product:
+        return jsonify({"success": False})
+
+    user_diet = session.get("preferences", {}).get("diet", [])
+    potential_pairs = []
+
+    for pair_name in product["pairs_with"]:
+        pair_id = pair_name.lower().replace(" ", "_")
+        pair_info = all_products.get(pair_id)
+        if pair_info:
+            p_diet = pair_info.get("diet", [])
+            if "vegetarian" in user_diet and "non_vegetarian" in p_diet:
+                continue
+            # Pass the id along so Gemini can echo it back
+            potential_pairs.append({**pair_info, "id": pair_id})
+
+    if not potential_pairs:
+        return jsonify({"success": False})
+
+    suggestion = get_upsell_pitch(product["name"], potential_pairs)
+    return jsonify({"success": True, "suggestion": suggestion})

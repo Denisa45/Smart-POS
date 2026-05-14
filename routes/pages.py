@@ -1,20 +1,21 @@
 from flask import Blueprint, render_template
 from services.firebase_config import db
 from services.hardware_service import set_ready_led
-from data import MENU_ITEMS
 from utils.order_utils import compute_order_status
-
+from services.firebase_service import get_products
 pages_bp = Blueprint("pages", __name__)
 
 
 @pages_bp.route("/")
 def start():
-    return render_template("start.html", menu_items=MENU_ITEMS)
+    products=get_products() or {}
+    return render_template("start.html", menu_items=products)
 
 
 @pages_bp.route("/menu")
 def menu():
-    return render_template("menu.html", menu_items=MENU_ITEMS)
+    products=get_products() or {}
+    return render_template("menu.html", menu_items=products)
 
 
 @pages_bp.route("/checkout")
