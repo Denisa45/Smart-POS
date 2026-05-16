@@ -4,46 +4,335 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Denisa's Special - Menu</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Segoe UI", sans-serif; background: #e8e2b8; color: #7b5a3d; min-height: 100vh; padding: 24px; }
-    .page { max-width: 1400px; margin: 0 auto; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
-    .brand { display: flex; flex-direction: column; }
-    .brand small { font-size: 1rem; color: #9a7b5f; margin-bottom: 4px; }
-    .brand h1 { font-size: 3rem; line-height: 1; }
-    .top-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .soft-btn { border: none; border-radius: 999px; padding: 12px 20px; font-size: 1rem; cursor: pointer; background: #f7f2dc; color: #7b5a3d; box-shadow: 0 4px 0 rgba(123,90,61,0.12); transition: transform 0.15s ease; }
-    .soft-btn:hover { transform: translateY(-2px); }
-    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-    .menu-section { background: rgba(255,251,236,0.55); border: 2px solid #d5c79f; border-radius: 32px; padding: 24px; }
-    .section-title { font-size: 1.5rem; margin-bottom: 18px; }
-    .products-grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 20px; }
-    .product-card { background: #f8f4e4; border: 2px solid #ceb98d; border-radius: 28px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 8px 18px rgba(123,90,61,0.08); transition: transform 0.18s ease; }
-    .product-card:hover { transform: translateY(-4px); }
-    .product-image-wrap { width: 100%; border-radius: 22px; overflow: hidden; background: #fffbee; }
-    .product-image-wrap img { width: 100%; height: auto; display: block; object-fit: cover; border-radius: 18px; }
-    .product-footer { display: flex; justify-content: center; margin-top: 14px; }
-    .add-btn { border: none; border-radius: 999px; padding: 12px 18px; background: #7dbb6d; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
-    .add-btn:hover { transform: scale(1.05); background: #6daa5d; }
-    .cart-panel { background: #f8f4e4; border: 2px solid #ceb98d; border-radius: 32px; padding: 24px; height: fit-content; position: sticky; top: 24px; box-shadow: 0 8px 18px rgba(123,90,61,0.08); }
-    .cart-title { font-size: 1.8rem; margin-bottom: 16px; }
-    .cart-items { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; min-height: 120px; }
-    .empty-cart { color: #9a7b5f; font-style: italic; }
-    .cart-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fffbee; border-radius: 18px; padding: 10px 12px; }
-    .cart-item-name { font-weight: 600; }
-    .qty-controls { display: flex; align-items: center; gap: 8px; }
-    .qty-btn { width: 30px; height: 30px; border: none; border-radius: 50%; background: #e8d9b0; color: #7b5a3d; font-size: 1rem; cursor: pointer; font-weight: 700; }
-    .cart-total { font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
-    .checkout-btn { width: 100%; border: none; border-radius: 999px; padding: 14px 18px; background: #7b5a3d; color: white; font-size: 1.05rem; font-weight: 700; cursor: pointer; }
-    .checkout-btn:hover { opacity: 0.92; }
 
-    /* ── Upsell modal ── */
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #e8e2b8;
+      color: #7b5a3d;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    /* TOP BAR */
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand small {
+      font-size: 1rem;
+      color: #9a7b5f;
+      margin-bottom: 4px;
+    }
+
+    .brand h1 {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .soft-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #f7f2dc;
+      color: #7b5a3d;
+      box-shadow: 0 4px 0 rgba(123,90,61,0.12);
+      transition: 0.2s ease;
+    }
+
+    .soft-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* MAIN LAYOUT */
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .menu-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+    }
+
+    /* CATEGORY SIDEBAR */
+
+    .category-sidebar {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 30px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: fit-content;
+      position: sticky;
+      top: 24px;
+      box-shadow: 0 8px 18px rgba(123,90,61,0.08);
+    }
+
+    .category-title {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .category-btn {
+      border: none;
+      border-radius: 20px;
+      padding: 16px;
+      background: #fffbee;
+      color: #7b5a3d;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      text-align: left;
+    }
+
+    .category-btn:hover {
+      background: #efe2b6;
+      transform: translateX(5px);
+    }
+
+    .category-btn.active {
+      background: #7dbb6d;
+      color: white;
+    }
+
+    /* PRODUCTS AREA */
+
+    .products-area {
+      background: rgba(255,251,236,0.55);
+      border: 2px solid #d5c79f;
+      border-radius: 32px;
+      padding: 24px;
+    }
+
+    .section-title {
+      font-size: 1.7rem;
+      margin-bottom: 24px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 22px;
+    }
+
+    .product-card {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 28px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 8px 18px rgba(123,90,61,0.08);
+      transition: 0.2s ease;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .product-image-wrap {
+      width: 100%;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fffbee;
+    }
+
+    .product-image-wrap img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      border-radius: 18px;
+    }
+
+    .product-info {
+      margin-top: 14px;
+    }
+
+    .product-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #9a7b5f;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .bonus-points {
+      font-size: 0.85rem;
+      color: #6daa5d;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .price {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .add-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: #7dbb6d;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.05);
+      background: #6daa5d;
+    }
+
+    /* CART */
+
+    .cart-panel {
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 32px;
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: 24px;
+      box-shadow: 0 8px 18px rgba(123,90,61,0.08);
+    }
+
+    .cart-title {
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+    }
+
+    .cart-items {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 18px;
+      min-height: 120px;
+    }
+
+    .empty-cart {
+      color: #9a7b5f;
+      font-style: italic;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: #fffbee;
+      border-radius: 18px;
+      padding: 10px 12px;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      background: #e8d9b0;
+      color: #7b5a3d;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .cart-total {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 18px;
+      background: #7b5a3d;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .checkout-btn:hover {
+      opacity: 0.92;
+    }
+
+    /* UPSELL MODAL */
+
     #upsell-modal {
       display: none;
       position: fixed;
       bottom: 30px;
-      right: 350px;
+      right: 370px;
       background: white;
       border: 3px solid #7dbb6d;
       border-radius: 20px;
@@ -53,187 +342,484 @@
       width: 280px;
       animation: slideUp 0.4s ease;
     }
+
     @keyframes slideUp {
-      from { transform: translateY(100px); opacity: 0; }
-      to   { transform: translateY(0);     opacity: 1; }
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
-    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .cart-panel { position: static; } #upsell-modal { right: 16px; } }
-    @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .brand h1 { font-size: 2.3rem; } }
+    /* RESPONSIVE */
+
+    @media (max-width: 1200px) {
+      .menu-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .category-sidebar {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .cart-panel {
+        position: static;
+      }
+
+      #upsell-modal {
+        right: 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .brand h1 {
+        font-size: 2.3rem;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <div class="page">
-    <div class="topbar">
-      <div class="brand">
-        <small>Denisa's Special</small>
-        <h1>Choose your bite</h1>
-      </div>
-      <div class="top-actions">
-        <button class="soft-btn" onclick="window.location.href='/'">← Back</button>
-      </div>
+
+<div class="page">
+
+  <!-- TOP BAR -->
+
+  <div class="topbar">
+    <div class="brand">
+      <small>Denisa's Special</small>
+      <h1>Choose your bite</h1>
     </div>
 
-    <div class="layout">
-      <div class="menu-section">
-        <h2 class="section-title">Today's favorites</h2>
-        <div class="products-grid">
-          {% for key, item in menu_items.items() %}
-          <div class="product-card">
-            <div class="product-image-wrap">
-              <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}">
-            </div>
-            <div style="font-size:0.8rem;text-align:center;color:#7bbf6a;margin-top:5px;">
-              +{{ item.bonus_points }} points
-            </div>
-            <div class="product-footer">
-              <!-- Fix: pass item.name so addToCart knows what to display -->
-              <button class="add-btn"
-  data-id="{{ key }}"
-  data-name="{{ item.name }}"
-  data-price="{{ item.price }}"
-  onclick="addToCart(this.dataset.id, this.dataset.name, parseFloat(this.dataset.price))">
-  Add +
-</button>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
+    <div class="top-actions">
+      <button class="soft-btn" onclick="window.location.href='/'">
+        ← Back
+      </button>
+    </div>
+  </div>
 
-      <aside class="cart-panel">
-        <h2 class="cart-title">Your tray</h2>
-        <div class="cart-items" id="cart-items">
-          <div class="empty-cart">Nothing here yet.</div>
+  <!-- MAIN -->
+
+  <div class="layout">
+
+    <!-- LEFT SIDE -->
+
+    <div class="menu-layout">
+
+      <!-- CATEGORIES -->
+
+      <aside class="category-sidebar">
+
+        <div class="category-title">
+          Categories
         </div>
-        <div class="cart-total" id="cart-total">Total: 0 lei</div>
-        <button class="checkout-btn" onclick="goToCheckout()">Continue</button>
+
+        <button class="category-btn active"
+                onclick="filterCategory('all', this)">
+          All
+        </button>
+
+        {% for category in categories %}
+        <button class="category-btn"
+                onclick="filterCategory('{{ category }}', this)">
+          {{ category.title() }}
+        </button>
+        {% endfor %}
+
       </aside>
+
+      <!-- PRODUCTS -->
+
+      <div class="products-area">
+
+        <h2 class="section-title">
+          Today's favorites
+        </h2>
+
+        <div class="products-grid">
+
+          {% for item in products %}
+
+          <div class="product-card"
+               data-category="{{ item.category }}">
+
+            <div class="product-image-wrap">
+<img src="{{ url_for('static', filename='assets/' + item.image.split('/')[-1]) }}"
+     alt="{{ item.name }}">
+            </div>
+
+            <div class="product-info">
+
+              <div class="product-name">
+                {{ item.name }}
+              </div>
+
+              <div class="product-meta">
+                <span>{{ item.prep_time }} min</span>
+
+                {% if item.meal_type %}
+                <span>{{ item.meal_type }}</span>
+                {% endif %}
+              </div>
+
+              <div class="bonus-points">
+                +{{ item.bonus_points }} loyalty points
+              </div>
+
+            </div>
+
+            <div class="product-footer">
+
+              <div class="price">
+                {{ item.price }} lei
+              </div>
+
+              <button class="add-btn"
+                      data-id="{{ item.id }}"
+                      data-name="{{ item.name }}"
+                      data-price="{{ item.price }}"
+                      onclick="addToCart(
+                        this.dataset.id,
+                        this.dataset.name,
+                        parseFloat(this.dataset.price)
+                      )">
+
+                Add +
+
+              </button>
+
+            </div>
+
+          </div>
+
+          {% endfor %}
+
+        </div>
+
+      </div>
+
     </div>
+
+    <!-- CART -->
+
+    <aside class="cart-panel">
+
+      <h2 class="cart-title">
+        Your tray
+      </h2>
+
+      <div class="cart-items" id="cart-items">
+        <div class="empty-cart">
+          Nothing here yet.
+        </div>
+      </div>
+
+      <div class="cart-total" id="cart-total">
+        Total: 0 lei
+      </div>
+
+      <button class="checkout-btn"
+              onclick="goToCheckout()">
+
+        Continue
+
+      </button>
+
+    </aside>
+
   </div>
 
-  <!-- Upsell modal -->
-  <div id="upsell-modal">
-    <div id="upsell-pitch" style="font-size:0.9rem;margin-bottom:10px;font-weight:bold;"></div>
-    <div id="upsell-item-name" style="color:#7b5a3d;margin-bottom:12px;"></div>
-    <button id="upsell-add-btn" class="add-btn" style="width:100%;">
-      Add for +<span id="upsell-price"></span> lei
-    </button>
-    <br>
-    <button onclick="closeUpsell()" style="border:none;background:none;color:gray;cursor:pointer;margin-top:8px;font-size:0.8rem;">
-      No thanks
-    </button>
+</div>
+
+<!-- UPSELL MODAL -->
+
+<div id="upsell-modal">
+
+  <div id="upsell-pitch"
+       style="font-size:0.9rem;
+              margin-bottom:10px;
+              font-weight:bold;">
   </div>
 
-  <script>
-    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
-    let upsellTimer = null;
+  <div id="upsell-item-name"
+       style="color:#7b5a3d;
+              margin-bottom:12px;">
+  </div>
 
-    function saveCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
+  <button id="upsell-add-btn"
+          class="add-btn"
+          style="width:100%;">
 
-    function closeUpsell() {
-      document.getElementById("upsell-modal").style.display = "none";
-      clearTimeout(upsellTimer);
-    }
+    Add for +
+    <span id="upsell-price"></span>
+    lei
 
-    async function addToCart(id, name, price) {
-      if (!cart[id]) {
-        cart[id] = { name, price, quantity: 0 };
-      }
-      cart[id].quantity += 1;
-      saveCart();
-      renderCart();
+  </button>
 
-      // Trigger upsell
-      try {
-        const res = await fetch("/get_upsell", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ item_id: id })
-        });
-        const data = await res.json();
+  <br>
 
-        if (data.success) {
-          const sug = data.suggestion;
-          document.getElementById("upsell-pitch").textContent = sug.pitch;
-          document.getElementById("upsell-item-name").textContent = sug.name;
-          document.getElementById("upsell-price").textContent = sug.price;
-          document.getElementById("upsell-add-btn").onclick = () => {
-            addToCart(sug.id, sug.name, sug.price);
-            closeUpsell();
-          };
-          document.getElementById("upsell-modal").style.display = "block";
+  <button onclick="closeUpsell()"
+          style="border:none;
+                 background:none;
+                 color:gray;
+                 cursor:pointer;
+                 margin-top:8px;
+                 font-size:0.8rem;">
 
-          // Auto-dismiss after 8 seconds
-          clearTimeout(upsellTimer);
-          upsellTimer = setTimeout(closeUpsell, 8000);
+    No thanks
+
+  </button>
+
+</div>
+
+<script>
+
+  const cart =
+    JSON.parse(localStorage.getItem("cart") || "{}");
+
+  let upsellTimer = null;
+
+  /* CATEGORY FILTER */
+
+  function filterCategory(category, btn) {
+
+    document.querySelectorAll(".category-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    document.querySelectorAll(".product-card")
+      .forEach(card => {
+
+        if (
+          category === "all" ||
+          card.dataset.category === category
+        ) {
+          card.style.display = "flex";
+        } else {
+          card.style.display = "none";
         }
-      } catch (e) {
-        console.error("Upsell error:", e);
-      }
+
+      });
+  }
+
+  /* CART */
+
+  function saveCart() {
+    localStorage.setItem(
+      "cart",
+      JSON.stringify(cart)
+    );
+  }
+
+  function closeUpsell() {
+    document.getElementById("upsell-modal")
+      .style.display = "none";
+
+    clearTimeout(upsellTimer);
+  }
+
+  async function addToCart(id, name, price) {
+
+    if (!cart[id]) {
+      cart[id] = {
+        name,
+        price,
+        quantity: 0
+      };
     }
 
-    function changeQty(id, delta) {
-      if (!cart[id]) return;
-      cart[id].quantity += delta;
-      if (cart[id].quantity <= 0) delete cart[id];
-      saveCart();
-      renderCart();
-    }
+    cart[id].quantity += 1;
 
-    function goToCheckout() {
-      if (Object.keys(cart).length === 0) { alert("Your cart is empty."); return; }
-      window.location.href = "/checkout";
-    }
+    saveCart();
+    renderCart();
 
-    function renderCart() {
-      const cartItems = document.getElementById("cart-items");
-      const cartTotal = document.getElementById("cart-total");
-      cartItems.innerHTML = "";
-      let total = 0;
-      const entries = Object.entries(cart);
+    /* UPSELL */
 
-      if (entries.length === 0) {
-        cartItems.innerHTML = '<div class="empty-cart">Nothing here yet.</div>';
-        cartTotal.textContent = "Total: 0 lei";
-        return;
-      }
+    try {
 
-      entries.forEach(([id, item]) => {
-        total += item.price * item.quantity;
-        const row = document.createElement("div");
-        row.className = "cart-item";
-
-        const left = document.createElement("div");
-        left.innerHTML = `<div class="cart-item-name">${item.name}</div><div>${item.price} lei</div>`;
-
-        const controls = document.createElement("div");
-        controls.className = "qty-controls";
-
-        const minus = document.createElement("button");
-        minus.className = "qty-btn";
-        minus.textContent = "-";
-        minus.onclick = () => changeQty(id, -1);
-
-        const qty = document.createElement("span");
-        qty.textContent = item.quantity;
-
-        const plus = document.createElement("button");
-        plus.className = "qty-btn";
-        plus.textContent = "+";
-        plus.onclick = () => changeQty(id, 1);
-
-        controls.append(minus, qty, plus);
-        row.append(left, controls);
-        cartItems.appendChild(row);
+      const res = await fetch("/get_upsell", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          item_id: id
+        })
       });
 
-      cartTotal.textContent = `Total: ${total.toFixed(2)} lei`;
+      const data = await res.json();
+
+      if (data.success) {
+
+        const sug = data.suggestion;
+
+        document.getElementById("upsell-pitch")
+          .textContent = sug.pitch;
+
+        document.getElementById("upsell-item-name")
+          .textContent = sug.name;
+
+        document.getElementById("upsell-price")
+          .textContent = sug.price;
+
+        document.getElementById("upsell-add-btn")
+          .onclick = () => {
+
+            addToCart(
+              sug.id,
+              sug.name,
+              sug.price
+            );
+
+            closeUpsell();
+          };
+
+        document.getElementById("upsell-modal")
+          .style.display = "block";
+
+        clearTimeout(upsellTimer);
+
+        upsellTimer =
+          setTimeout(closeUpsell, 8000);
+      }
+
+    } catch (e) {
+
+      console.error("Upsell error:", e);
+
+    }
+  }
+
+  function changeQty(id, delta) {
+
+    if (!cart[id]) return;
+
+    cart[id].quantity += delta;
+
+    if (cart[id].quantity <= 0) {
+      delete cart[id];
     }
 
+    saveCart();
     renderCart();
-  </script>
+  }
+
+  function goToCheckout() {
+
+    if (Object.keys(cart).length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    window.location.href = "/checkout";
+  }
+
+  function renderCart() {
+
+    const cartItems =
+      document.getElementById("cart-items");
+
+    const cartTotal =
+      document.getElementById("cart-total");
+
+    cartItems.innerHTML = "";
+
+    let total = 0;
+
+    const entries = Object.entries(cart);
+
+    if (entries.length === 0) {
+
+      cartItems.innerHTML =
+        '<div class="empty-cart">Nothing here yet.</div>';
+
+      cartTotal.textContent =
+        "Total: 0 lei";
+
+      return;
+    }
+
+    entries.forEach(([id, item]) => {
+
+      total += item.price * item.quantity;
+
+      const row =
+        document.createElement("div");
+
+      row.className = "cart-item";
+
+      const left =
+        document.createElement("div");
+
+      left.innerHTML = `
+        <div class="cart-item-name">
+          ${item.name}
+        </div>
+
+        <div>
+          ${item.price} lei
+        </div>
+      `;
+
+      const controls =
+        document.createElement("div");
+
+      controls.className = "qty-controls";
+
+      const minus =
+        document.createElement("button");
+
+      minus.className = "qty-btn";
+      minus.textContent = "-";
+
+      minus.onclick =
+        () => changeQty(id, -1);
+
+      const qty =
+        document.createElement("span");
+
+      qty.textContent = item.quantity;
+
+      const plus =
+        document.createElement("button");
+
+      plus.className = "qty-btn";
+      plus.textContent = "+";
+
+      plus.onclick =
+        () => changeQty(id, 1);
+
+      controls.append(minus, qty, plus);
+
+      row.append(left, controls);
+
+      cartItems.appendChild(row);
+
+    });
+
+    cartTotal.textContent =
+      `Total: ${total.toFixed(2)} lei`;
+  }
+
+  renderCart();
+
+</script>
+
 </body>
 </html>

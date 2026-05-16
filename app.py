@@ -710,7 +710,7 @@ from core.startup import start_background_services
 def create_app():
     print(">>> CREATE_APP CALLED")
 
-    app = Flask(__name__, static_folder="assets", static_url_path="/assets")
+    app = Flask(__name__)
 
     print(">>> IMPORTING BLUEPRINTS")
 
@@ -731,7 +731,8 @@ def create_app():
     return app
 
 app = create_app()
-
+from routes.enroll import enroll_bp
+app.register_blueprint(enroll_bp)
 if __name__ == "__main__":
     start_background_services()
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

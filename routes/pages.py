@@ -11,11 +11,29 @@ def start():
     products=get_products() or {}
     return render_template("start.html", menu_items=products)
 
-
 @pages_bp.route("/menu")
 def menu():
-    products=get_products() or {}
-    return render_template("menu.html", menu_items=products)
+    products = db.child("products").get().val()
+
+    product_list = []
+
+    for key, product in products.items():
+        product["id"] = key
+        product_list.append(product)
+
+    categories = sorted(list(set(
+        p.get("category", "other")
+        for p in product_list
+    )))
+
+    print(categories)
+
+    return render_template(
+        "menu.html",
+        products=product_list,
+        categories=categories
+    )
+    
 
 
 @pages_bp.route("/checkout")
