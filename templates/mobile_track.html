@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order #{{ order.display_number }} — Denisa's Special</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #f5f0e8;
+      --warm-white: #fdfaf4;
+      --brown: #5c3d2e;
+      --brown-light: #8a6552;
+      --brown-muted: #b09080;
+      --border: #ddd0bc;
+      --pending-bg: #fef3cd;
+      --pending-fg: #7d4e12;
+      --preparing-bg: #e8f0fe;
+      --preparing-fg: #2c4ea3;
+      --ready-bg: #d6f5d6;
+      --ready-fg: #1a5c1a;
+      --gold: #c9973a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--brown);
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+    }
+
+    /* subtle grain texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 440px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .order-number {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.6rem;
+      color: var(--brown);
+      line-height: 1;
+    }
+
+    .order-subtitle {
+      color: var(--brown-muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--warm-white);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(92, 61, 46, 0.06);
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--brown-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Status */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.4s ease;
+    }
+
+    .status-pending  { background: var(--pending-bg);  color: var(--pending-fg); }
+    .status-preparing { background: var(--preparing-bg); color: var(--preparing-fg); }
+    .status-ready    { background: var(--ready-bg);    color: var(--ready-fg); }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    .status-ready .status-dot { animation: none; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* Time remaining */
+    .time-remaining {
+      font-size: 0.9rem;
+      color: var(--brown-muted);
+      margin-top: 10px;
+    }
+
+    .time-bar-wrap {
+      background: var(--border);
+      border-radius: 999px;
+      height: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .time-bar {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 999px;
+      transition: width 3s linear;
+    }
+
+    /* Items */
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    .item-row:last-child { border-bottom: none; }
+
+    .item-name { color: var(--brown); }
+    .item-qty {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px 10px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--brown-light);
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1.5px solid var(--border);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* Points */
+    .points-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff8e6;
+      border: 1.5px solid #f0d080;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-weight: 600;
+      color: #8a6000;
+      font-size: 0.95rem;
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .info-cell {
+      background: var(--cream);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .info-cell-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brown-muted);
+      margin-bottom: 4px;
+    }
+
+    .info-cell-value {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--brown);
+    }
+
+    /* Footer note */
+    .footer-note {
+      text-align: center;
+      color: var(--brown-muted);
+      font-size: 0.8rem;
+      margin-top: 20px;
+    }
+
+    /* ===== READY OVERLAY ===== */
+    #ready-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #1a5c1a;
+      z-index: 9999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px;
+      animation: overlayIn 0.4s ease;
+    }
+
+    #ready-overlay.show { display: flex; }
+
+    @keyframes overlayIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes overlayPulse {
+      0%, 100% { background: #1a5c1a; }
+      50%       { background: #2e7d32; }
+    }
+
+    #ready-overlay.pulse {
+      animation: overlayPulse 1s ease-in-out 3;
+    }
+
+    .overlay-icon {
+      font-size: 5rem;
+      margin-bottom: 20px;
+      animation: bounceIn 0.6s ease 0.2s both;
+    }
+
+    @keyframes bounceIn {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .overlay-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .overlay-sub {
+      color: rgba(255,255,255,0.8);
+      font-size: 1.1rem;
+      margin-bottom: 36px;
+    }
+
+    .overlay-btn {
+      background: white;
+      color: #1a5c1a;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<!-- READY OVERLAY -->
+<div id="ready-overlay">
+  <div class="overlay-icon">✅</div>
+  <div class="overlay-title">Order Ready!</div>
+  <div class="overlay-sub">Please come pick it up 🎉</div>
+  <button class="overlay-btn" onclick="dismissOverlay()">Got it!</button>
+</div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">Denisa's Special</div>
+    <div class="order-number">Order #{{ order.display_number }}</div>
+    <div class="order-subtitle">Your snack is being prepared with care ✨</div>
+  </div>
+
+  <!-- Status card -->
+  <div class="card">
+    <div class="card-label">Status</div>
+    <div id="status-pill" class="status-pill status-{{ order.status }}">
+      <span class="status-dot"></span>
+      <span id="status-text">
+        {% if order.status == "ready" %}Ready! Pick it up
+        {% elif order.status == "preparing" %}Preparing your order
+        {% else %}Order received
+        {% endif %}
+      </span>
+    </div>
+
+    <div id="time-wrap" {% if order.status == "ready" %}style="display:none"{% endif %}>
+      <div class="time-remaining" id="time-label">
+        {% if order.remaining_time > 0 %}
+          About {{ order.remaining_time }} seconds remaining
+        {% endif %}
+      </div>
+      <div class="time-bar-wrap">
+        <div class="time-bar" id="time-bar"
+          style="width: {% if order.estimated_time > 0 %}{{ [100 - (order.remaining_time / order.estimated_time * 100), 0] | max | int }}{% else %}0{% endif %}%">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items card -->
+  <div class="card">
+    <div class="card-label">Your order</div>
+    {% for product, qty in order.products.items() %}
+    <div class="item-row">
+      <span class="item-name">{{ product }}</span>
+      <span class="item-qty">× {{ qty }}</span>
+    </div>
+    {% endfor %}
+    <div class="total-row">
+      <span>Total</span>
+      <span>{{ order.total }} lei</span>
+    </div>
+  </div>
+
+  <!-- Payment + time info -->
+  <div class="card">
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-cell-label">Payment</div>
+        <div class="info-cell-value">{{ order.payment_method }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Placed at</div>
+        <div class="info-cell-value">{{ order.time[11:16] if order.time else "—" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loyalty points -->
+  {% if points > 0 %}
+  <div class="card" style="text-align:center;">
+    <div class="card-label">Loyalty</div>
+    <div class="points-badge">⭐ {{ points }} points earned</div>
+  </div>
+  {% endif %}
+
+  <div class="footer-note">Updates every 3 seconds automatically</div>
+
+</div><!-- end container -->
+<!-- Jinja variables exposed to plain JS -->
+<script>
+  const orderId = "{{ order_id }}";
+  const estimatedTime = {{ order.estimated_time or 0 }};
+  let notified = false;
+
+  function dismissOverlay() {
+    document.getElementById("ready-overlay").classList.remove("show", "pulse");
+  }
+
+  function showReadyOverlay() {
+    if (notified) return;
+    notified = true;
+    const overlay = document.getElementById("ready-overlay");
+    overlay.classList.add("show");
+    setTimeout(() => overlay.classList.add("pulse"), 100);
+    setTimeout(() => overlay.classList.remove("pulse"), 3200);
+  }
+
+  async function checkStatus() {
+    try {
+      const res = await fetch(`/api/order_status/${orderId}`);
+      const data = await res.json();
+      const pill = document.getElementById("status-pill");
+      const text = document.getElementById("status-text");
+      const timeWrap = document.getElementById("time-wrap");
+      const timeLabel = document.getElementById("time-label");
+      const timeBar = document.getElementById("time-bar");
+
+      pill.className = "status-pill status-" + data.status;
+
+      if (data.status === "ready") {
+        text.textContent = "Ready! Pick it up";
+        timeWrap.style.display = "none";
+        showReadyOverlay();
+      } else if (data.status === "preparing") {
+        text.textContent = "Preparing your order";
+        timeWrap.style.display = "block";
+        if (data.remaining > 0) {
+          timeLabel.textContent = `About ${data.remaining} seconds remaining`;
+          const pct = estimatedTime > 0
+            ? Math.min(100, Math.max(0, 100 - (data.remaining / estimatedTime * 100)))
+            : 0;
+          timeBar.style.width = pct + "%";
+        }
+      } else {
+        text.textContent = "Order received";
+      }
+    } catch(e) {
+      console.log("Poll error:", e);
+    }
+  }
+
+  setInterval(checkStatus, 3000);
+</script>
+
+<!-- Firebase FCM � separate module script, no Jinja variables here -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAXAm1Q9aJJp57kG_DX9LjTG0w3BYki68o",
+  authDomain: "iot-kiosk-pos.firebaseapp.com",
+  databaseURL: "https://iot-kiosk-pos-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "iot-kiosk-pos",
+  storageBucket: "iot-kiosk-pos.firebasestorage.app",
+  messagingSenderId: "813825236516",
+  appId: "1:813825236516:web:cb54677e33cce820de82b1"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+async function initFCM() {
+  try {
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    const token = await getToken(messaging, {
+      vapidKey: "BGAHIqvr8P_XNDkqe3wWe-LGoodshcNGJ4xqHd1CYRbWUBHbKfDXueladUW9BbaNNlPdJIX0v4IlsHRws-XL5UA",
+      serviceWorkerRegistration: registration
+    });
+
+    if (token) {
+      // orderId is available from the plain script above
+      await fetch('/save_fcm_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: window.orderId || orderId, token })
+      });
+      console.log('[FCM] Token saved');
+      
+    }
+  } catch(e) {
+    console.log('[FCM] Error:', e);
+  }
+}
+
+// onMessage(messaging, (payload) => {
+//   console.log('[FCM] Foreground message');
+//   showReadyOverlay();
+// });
+onMessage(messaging, (payload) => {
+  console.log('[FCM] Foreground message', payload);
+
+  if (Notification.permission === "granted") {
+    new Notification(payload.notification.title, {
+      body: payload.notification.body,
+      icon: "/static/assets/icon.png"
+    });
+  }
+
+  showReadyOverlay();
+});
+
+initFCM();
+</script>
+</body>
+</html>

@@ -198,17 +198,20 @@
         <div class="subtitle">Your snack is being prepared with care ✨</div>
 
         <div class="info-grid">
-            <div class="info-box">
-                <div class="info-label">Total</div>
-                <div class="info-value">{{ order.total }} lei</div>
+                <div class="info-box">
+                    <div class="info-label">Total</div>
+                    <div class="info-value">{{ order.total }} lei</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Payment</div>
+                    <div class="info-value">{{ order.payment_method }}</div>
+                </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-label">Payment</div>
-                <div class="info-value">{{ order.payment_method }}</div>
-            </div>
+            <div class="section" style="text-align:center;">
+                <h2 class="section-title">Track on your phone</h2>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.0.190:5000/track/{{ order.order_id }}" style="border-radius:12px;" />                <p style="color:#9a7b5f; font-size:0.9rem; margin-top:8px;">Scan to follow your order status</p>
         </div>
-
         <div class="section">
             <h2 class="section-title">Your order</h2>
             <ul class="products-list">

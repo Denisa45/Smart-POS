@@ -72,3 +72,13 @@ def client_order(order_id):
 
     set_ready_led(False)
     return "Order not found", 404
+from flask import send_from_directory
+import os
+
+@pages_bp.route('/firebase-messaging-sw.js')
+def serve_sw():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), '..', 'static'),
+        'firebase-messaging-sw.js',
+        mimetype='application/javascript'
+    )

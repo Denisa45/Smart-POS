@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 import time
 
 from services.firebase_config import db
-from services.hardware_service import set_ready_led
 from services.session_service import clear_session
 from core.state import StateManager, KioskState
 
@@ -28,7 +27,6 @@ def _handle_face_login(user_id):
             "status": "ready", "timestamp": time.time()
         })
         StateManager.set(KioskState.LOGGED_IN, user="guest")
-        set_ready_led(True)
         print("[SESSION] Guest login")
         return
 
@@ -40,7 +38,6 @@ def _handle_face_login(user_id):
             "status": "ready", "timestamp": time.time()
         })
         StateManager.set(KioskState.LOGGED_IN, user="guest")
-        set_ready_led(True)
         print(f"[SESSION] {user_id} not in members → guest")
         return
 
@@ -54,7 +51,6 @@ def _handle_face_login(user_id):
         "timestamp": time.time()
     })
     StateManager.set(KioskState.LOGGED_IN, user=user_id)
-    set_ready_led(True)
     print(f"[SESSION] Member logged in: {user_id} | card={member['card_uid']}")
 
 
@@ -75,7 +71,6 @@ def get_state():
 def logout():
     clear_session(db)
     StateManager.reset()
-    set_ready_led(False)
     return jsonify({"success": True})
 
 

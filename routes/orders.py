@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, url_for
+from flask import Blueprint, request, jsonify, url_for, render_template
 from datetime import datetime
 import uuid
 
@@ -7,7 +7,7 @@ from services.card_service import process_card_payment
 from services.session_service import get_valid_session
 from services.hardware_service import set_ready_led
 from services.firebase_service import get_products
-
+from utils.order_utils import compute_order_status
 orders_bp = Blueprint("orders", __name__)
 
 
@@ -60,8 +60,6 @@ def place_order():
         }
 
         db.child("orders").push(order_data)
-        set_ready_led(False)
-
         redirect = (
             url_for("pages.card_payment_page", order_id=order_id)
             if payment_method == "Card"
@@ -130,3 +128,57 @@ def check_card_payment(order_id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+@orders_bp.route("/track/<order_id>")
+def track_order(order_id):
+    orders = db.child("orders").get().val()
+    order = None
+    for key, data in (orders or {}).items():
+        if data.get("order_id") == order_id:
+            order = data
+            order["key"] = key
+            break
+
+    if not order:
+        return "Order not found", 404
+
+    # compute status and remaining time
+    status, remaining = compute_order_status(
+        order.get("created_at", ""),
+        order.get("estimated_time", 0)
+    )
+    order["status"] = status
+    order["remaining_time"] = remaining
+
+    points = 0
+    card_uid = order.get("card_uid")
+    if card_uid:
+        member = db.child("members").child(card_uid).get().val()
+        points = (member or {}).get("bonus_points", 0)
+
+    return render_template("mobile_track.html",
+        order=order,
+        order_id=order_id,
+        points=points
+    )
+
+@orders_bp.route("/api/order_status/<order_id>")
+def order_status_api(order_id):
+    orders = db.child("orders").get().val()
+    for key, data in (orders or {}).items():
+        if data.get("order_id") == order_id:
+            status, remaining = compute_order_status(
+                data.get("created_at", ""),
+                data.get("estimated_time", 0)
+            )
+            return jsonify({"status": status, "remaining": remaining})
+    return jsonify({"status": "unknown"}), 404
+
+@orders_bp.route("/save_fcm_token", methods=["POST"])
+def save_fcm_token():
+    data = request.get_json()
+    order_id = data.get("order_id")
+    token = data.get("token")
+    if order_id and token:
+        db.child("fcm_tokens").child(order_id).set({"token": token})
+        return jsonify({"success": True})
+    return jsonify({"success": False}), 400
