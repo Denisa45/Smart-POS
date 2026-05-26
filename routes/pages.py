@@ -3,6 +3,9 @@ from services.firebase_config import db
 from services.hardware_service import set_ready_led
 from utils.order_utils import compute_order_status
 from services.firebase_service import get_products
+from services.session_service import get_valid_session
+
+
 pages_bp = Blueprint("pages", __name__)
 
 
@@ -35,12 +38,70 @@ def menu():
     )
     
 
-
 @pages_bp.route("/checkout")
 def checkout():
-    return render_template("checkout.html")
+    session = get_valid_session(db)
+    member = None
+    bonus_points = 0
+    if session:
+        # try by user_id (name) first, then by card_uid
+        user_id = session.get("user_id")
+        uid = session.get("card_uid")
+        
+        if user_id:
+            member = db.child("members").child(user_id).get().val()
+        
+        if not member and uid:
+            member = db.child("members").child(uid).get().val()
+        
+        if member:
+            bonus_points = member.get("bonus_points", 0)
 
+    return render_template(
+        "checkout.html",
+        member=member,
+        bonus_points=bonus_points
+    )
 
+from flask import request, jsonify
+
+@pages_bp.route("/checkout_preview", methods=["POST"])
+def checkout_preview():
+    try:
+        data = request.get_json()
+        cart = data.get("cart", {})
+        use_points = data.get("use_points", False)
+
+        # calculate total from cart
+        total = sum(item["price"] * item["quantity"] for item in cart.values())
+
+        discount = 0
+        if use_points:
+            session = get_valid_session(db)
+            if session:
+                user_id = session.get("user_id")
+                uid = session.get("card_uid")
+
+                member = None
+                if user_id:
+                    member = db.child("members").child(user_id).get().val()
+                if not member and uid:
+                    member = db.child("members").child(uid).get().val()
+
+                if member:
+                    points = member.get("bonus_points", 0)
+                    discount = min(points // 10, 25)
+        final_total = max(0, total - discount)
+
+        return jsonify({
+            "success": True,
+            "total": total,
+            "discount": discount,
+            "final_total": final_total
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+        
 @pages_bp.route("/card_payment/<order_id>")
 def card_payment_page(order_id):
     return render_template("card_payment.html", order_id=order_id)

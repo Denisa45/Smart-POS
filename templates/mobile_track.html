@@ -376,12 +376,29 @@
   </div>
 
   <!-- Loyalty points -->
-  {% if points > 0 %}
-  <div class="card" style="text-align:center;">
-    <div class="card-label">Loyalty</div>
-    <div class="points-badge">⭐ {{ points }} points earned</div>
+ {% if earned_points > 0 %}
+<div class="card" style="text-align:center;">
+  <div class="card-label">Loyalty Rewards</div>
+
+  <div class="points-badge">
+    ? +{{ earned_points }} points earned
   </div>
-  {% endif %}
+
+  <div style="
+    margin-top:12px;
+    color: var(--brown-muted);
+    font-size: 0.9rem;
+  ">
+    Total balance: <strong>{{ total_points }}</strong> points
+  </div>
+  {% if order.discount_used and order.discount_used > 0 %}
+<div class="total-row" style="color:green;">
+  <span>Loyalty Discount</span>
+  <span>-{{ order.discount_used }} lei</span>
+</div>
+{% endif %}
+</div>
+{% endif %}
 
   <div class="footer-note">Updates every 3 seconds automatically</div>
 

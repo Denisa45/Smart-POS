@@ -160,3 +160,35 @@ def get_upsell():
 
     suggestion = get_upsell_pitch(product["name"], potential_pairs)
     return jsonify({"success": True, "suggestion": suggestion})
+@session_bp.route("/get_checkout_offer", methods=["POST"])
+def get_checkout_offer():
+    from services.gemini_service import get_discount_offer
+
+    data = request.get_json() or {}
+    cart_total = data.get("cart_total", 0)
+
+    session = db.child("current_session").get().val() or {}
+    user_id = session.get("user_id", "Guest")
+    prefs = session.get("preferences", {})
+    bonus_points = session.get("bonus_points", 0)
+
+    offer = get_discount_offer(user_id, prefs, cart_total, bonus_points)
+
+    # Calculate discount safely in Python
+    discount = 0
+    if offer["offer_type"] == "percentage":
+        if offer["condition"] == "always":
+            discount = round(cart_total * offer["value"] / 100)
+        elif offer["condition"] == "order_above_40" and cart_total > 40:
+            discount = round(cart_total * offer["value"] / 100)
+    elif offer["offer_type"] == "fixed":
+        discount = min(offer["value"], cart_total)
+
+    return jsonify({
+        "success": True,
+        "offer_type": offer["offer_type"],
+        "value": offer["value"],
+        "discount": discount,
+        "reason": offer["reason"],
+        "condition": offer["condition"]
+    })

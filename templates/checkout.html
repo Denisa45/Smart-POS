@@ -205,7 +205,21 @@
 
       <button class="soft-btn" onclick="window.location.href='/menu'">← Back to menu</button>
     </div>
-
+    <div id="gemini-offer" style="display:none;
+    background: #fffbee; border: 2px solid #ceb98d;
+    border-radius: 24px; padding: 18px 24px;
+    margin-bottom: 24px;">
+    <div style="font-size:0.85rem; color:#9a7b5f; margin-bottom:6px;">
+        ?? Special offer for you
+    </div>
+    <div id="offer-reason" style="font-size:1.05rem; color:#7b5a3d; font-weight:600;"></div>
+    <div id="offer-value" style="font-size:0.95rem; color:#c9873a; margin-top:4px;"></div>
+    <label style="display:flex; gap:10px; margin-top:12px; align-items:center; cursor:pointer;">
+        <input type="checkbox" id="use-offer-checkbox" onchange="applyOffer()">
+        <span style="font-weight:600; color:#7b5a3d;">Apply this offer</span>
+    </label>
+</div>
+<input type="hidden" name="gemini_discount" id="gemini_discount" value="0">
     <form method="POST" action="/place_order" id="checkout-form">
       <div class="layout">
         <section class="panel">
@@ -234,30 +248,127 @@
         </section>
 
         <aside class="panel">
-          <h2>Payment</h2>
+         <h2>Payment</h2>
 
-          <input type="hidden" name="payment_method" id="payment_method" value="Card">
+<input type="hidden" name="payment_method" id="payment_method" value="Card">
 
-          <div class="payment-options">
-            <div class="payment-card active" onclick="selectPayment('Card', this)">
-              <div class="payment-title">💳 Card</div>
-              <div class="payment-desc">Pay by tapping your RFID card on the reader.</div>
-            </div>
+<div class="payment-options">
+  <div class="payment-card active" onclick="selectPayment('Card', this)">
+    <div class="payment-title">?? Card</div>
+    <div class="payment-desc">
+      Pay by tapping your RFID card on the reader.
+    </div>
+  </div>
 
-            <div class="payment-card" onclick="selectPayment('Cash', this)">
-              <div class="payment-title">💵 Cash</div>
-              <div class="payment-desc">Pay with cash at collection.</div>
-            </div>
-          </div>
+  <div class="payment-card" onclick="selectPayment('Cash', this)">
+    <div class="payment-title">?? Cash</div>
+    <div class="payment-desc">
+      Pay with cash at collection.
+    </div>
+  </div>
+</div>
+<div class="payment-card" id="points-box" style="margin-top:18px;">
+  <div class="payment-title">? Loyalty Points</div>
+  <div class="payment-desc">
+    You currently have <strong id="points-value">{{ bonus_points or 0 }}</strong> points.
+    {% if bonus_points >= 10 %}
+    (worth {{ (bonus_points // 10) }} lei discount)
+    {% endif %}
+  </div>
+  {% if bonus_points >= 10 %}
+  <label style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+    <input type="checkbox" name="use_points" value="1" onchange="updatePreview()">
+    Apply loyalty discount
+  </label>
+  {% endif %}
+</div>
 
-          <button type="submit" class="place-btn" id="place-btn">Place Order</button>
-          <div class="checkout-note" id="checkout-note"></div>
+<button type="submit" class="place-btn" id="place-btn">Place Order</button>
+<div class="checkout-note" id="checkout-note"></div>
         </aside>
+        
       </div>
     </form>
   </div>
 
   <script>
+    let geminiDiscount = 0;
+
+async function loadGeminiOffer() {
+    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+    const subtotal = Object.values(cart).reduce((s, i) => s + i.price * i.quantity, 0);
+    if (subtotal === 0) return;
+
+    try {
+        const res = await fetch("/get_checkout_offer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart_total: subtotal })
+        });
+        const data = await res.json();
+
+        if (data.success && data.offer_type !== "none" && data.discount > 0) {
+            geminiDiscount = data.discount;
+            document.getElementById("offer-reason").textContent = "? " + data.reason;
+            document.getElementById("offer-value").textContent =
+                `Save ${data.discount} lei on your order!`;
+            document.getElementById("gemini-offer").style.display = "block";
+        }
+    } catch(e) {
+        console.log("Offer error:", e);
+    }
+}
+
+function applyOffer() {
+    const checked = document.getElementById("use-offer-checkbox").checked;
+    document.getElementById("gemini_discount").value = checked ? geminiDiscount : 0;
+
+    // update total display
+    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+    const subtotal = Object.values(cart).reduce((s, i) => s + i.price * i.quantity, 0);
+    const pointsDiscount = parseInt(document.getElementById("grand-total")
+        .dataset.pointsDiscount || 0);
+    const offerDiscount = checked ? geminiDiscount : 0;
+    const final = Math.max(0, subtotal - pointsDiscount - offerDiscount);
+
+    document.getElementById("grand-total").textContent = final + " lei";
+
+    const note = document.getElementById("checkout-note");
+    note.textContent = checked ? `?? You save ${offerDiscount} lei with this offer!` : "";
+}
+
+// call on page load
+loadCheckout();
+loadGeminiOffer();
+selectPayment("Card", document.querySelector(".payment-card.active"));
+    async function updatePreview() {
+  const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+  const usePoints = document.querySelector('input[name="use_points"]')?.checked || false;
+
+  const res = await fetch("/checkout_preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      cart,
+      use_points: usePoints
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) return;
+
+  document.getElementById("subtotal").textContent = data.total + " lei";
+  document.getElementById("grand-total").textContent = data.final_total + " lei";
+
+  let note = document.getElementById("checkout-note");
+  if (data.discount > 0) {
+    note.textContent = `?? You save ${data.discount} lei using loyalty points!`;
+  } else {
+    note.textContent = "";
+  }
+}
+
     function selectPayment(method, element) {
       document.getElementById("payment_method").value = method;
 
