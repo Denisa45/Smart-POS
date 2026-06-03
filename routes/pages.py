@@ -4,7 +4,7 @@ from services.hardware_service import set_ready_led
 from utils.order_utils import compute_order_status
 from services.firebase_service import get_products
 from services.session_service import get_valid_session
-
+from flask import jsonify
 
 pages_bp = Blueprint("pages", __name__)
 
@@ -143,3 +143,27 @@ def serve_sw():
         'firebase-messaging-sw.js',
         mimetype='application/javascript'
     )
+@pages_bp.route("/request_enrollment", methods=["POST"])
+def request_enrollment():
+
+    db.child("kiosk_command").set({
+        "action": "enroll"
+    })
+
+    return jsonify({"success": True})
+@pages_bp.route("/guest_login", methods=["POST"])
+def guest_login():
+
+    db.child("current_session").set({
+        "user_id": "guest",
+        "card_uid": "",
+        "bonus_points": 0,
+        "type": "guest",
+        "status": "active"
+    })
+
+    db.child("current_state").set({
+        "state": "logged_in"
+    })
+
+    return jsonify({"success": True})
