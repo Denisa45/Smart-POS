@@ -177,6 +177,17 @@
   <div class="title">Denisa's Special</div>
 <img src="{{ url_for('static', filename='assets/sandwich.png') }}" class="sandwich">
   <div class="hint">Look at the camera or tap your card</div>
+
+<div style="margin-top:30px;">
+  <button class="cta" onclick="continueGuest()">
+    Continue as Guest
+  </button>
+
+  <button class="cta"
+          style="background:#efad4d;margin-left:10px;"
+          onclick="registerMember()">
+    Become a Member
+  </button>
 </div>
 
 <div id="welcome"></div>
