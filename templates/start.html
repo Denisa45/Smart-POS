@@ -305,6 +305,17 @@ function addToCartAndGo(id, customPrice = null) {
 function goToMenu() {
   window.location.href = "/menu";
 }
+ async function continueGuest() {
+    await fetch("/guest_login", {
+        method: "POST"
+    });
+}
+
+async function registerMember() {
+    await fetch("/request_enrollment", {
+        method: "POST"
+    });
+}
 </script>
 </body>
 </html>
