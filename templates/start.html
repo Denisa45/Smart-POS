@@ -193,6 +193,27 @@
 <div id="welcome"></div>
 
 <script>
+ function showLoginChoice() {
+
+    const waiting = document.getElementById("waiting");
+
+    waiting.innerHTML = `
+        <div class="title">Welcome</div>
+
+        <div style="margin-top:20px;">
+            <button class="cta"
+                    onclick="continueGuest()">
+                Continue as Guest
+            </button>
+
+            <button class="cta"
+                    style="background:#efad4d;margin-left:10px;"
+                    onclick="registerMember()">
+                Become a Member
+            </button>
+        </div>
+    `;
+}
   const PRODUCTS = {{ menu_items | tojson }};
   let polling = true;
 
@@ -205,6 +226,9 @@
         polling = false;
         await showWelcome(data);
       }
+     else if (data.state === "choose_login") {
+    showLoginChoice();
+    }
     } catch (e) {}
   }
 async function showWelcome(stateData) {
