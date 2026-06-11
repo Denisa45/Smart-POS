@@ -34,7 +34,7 @@ def get_llm_recommendations(member_name, preferences, filtered_menu):
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.0-flash-lite",
             contents=prompt
         )
 
@@ -75,7 +75,7 @@ def get_upsell_pitch(main_item_name, potential_pairs):
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.0-flash-lite",
             contents=prompt
         )
 
@@ -123,7 +123,7 @@ def get_discount_offer(member_name, preferences, cart_total, bonus_points):
     """
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.0-flash-lite",
             contents=prompt
         )
         clean = response.text.replace("```json", "").replace("```", "").strip()

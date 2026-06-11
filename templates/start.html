@@ -177,134 +177,126 @@
   <div class="title">Denisa's Special</div>
 <img src="{{ url_for('static', filename='assets/sandwich.png') }}" class="sandwich">
   <div class="hint">Look at the camera or tap your card</div>
-
+<!-- replace the two buttons in #waiting -->
 <div style="margin-top:30px;">
   <button class="cta" onclick="continueGuest()">
     Continue as Guest
   </button>
-
   <button class="cta"
           style="background:#efad4d;margin-left:10px;"
-          onclick="registerMember()">
+          onclick="showEnrollForm()">
     Become a Member
   </button>
+</div>
+
+<div id="enroll-panel" style="display:none; margin-top:24px; text-align:center;">
+  <div style="font-size:20px; margin-bottom:12px;">Enter your name to enroll</div>
+  <input id="enroll-name-input" type="text" placeholder="Your name"
+         style="padding:12px 20px; font-size:18px; border-radius:12px;
+                border:2px solid #ceb98d; outline:none; width:260px;"/>
+  <br/><br/>
+  <button class="cta" onclick="submitEnrollName()">Start Enrollment</button>
+  <button class="cta" style="background:#aaa; margin-left:10px;"
+          onclick="cancelEnroll()">Cancel</button>
+  <div id="enroll-status" style="margin-top:16px; font-size:16px; color:#5a9e48;"></div>
+</div>
+
 </div>
 
 <div id="welcome"></div>
 
 <script>
  function showLoginChoice() {
-
-    const waiting = document.getElementById("waiting");
-
-    waiting.innerHTML = `
-        <div class="title">Welcome</div>
-
-        <div style="margin-top:20px;">
-            <button class="cta"
-                    onclick="continueGuest()">
-                Continue as Guest
-            </button>
-
-            <button class="cta"
-                    style="background:#efad4d;margin-left:10px;"
-                    onclick="registerMember()">
-                Become a Member
-            </button>
-        </div>
-    `;
+    // choose_login state no longer used � buttons always visible, nothing to do
 }
   const PRODUCTS = {{ menu_items | tojson }};
   let polling = true;
 
-  async function checkState() {
+async function checkState() {
     if (!polling) return;
     try {
-      const res = await fetch("/get_state");
-      const data = await res.json();
-      if (data.state === "logged_in") {
-        polling = false;
-        await showWelcome(data);
-      }
-     else if (data.state === "choose_login") {
-    showLoginChoice();
-    }
+        const res = await fetch("/get_state");
+        const data = await res.json();
+        if (data.state === "logged_in") {
+            polling = false;
+            showWelcome(data);          // no await � show UI immediately
+            loadRecommendations(data);  // separate async call, non-blocking
+        } else if (data.state === "choose_login") {
+            showLoginChoice();
+        }
     } catch (e) {}
-  }
-async function showWelcome(stateData) {
-    let recs = [];
-    let bonusPoints = 0;
-    let aiPitch = "";
-    let loyaltyDeal = "";
-    
+}
+
+function showWelcome(stateData) {
+    // show the frame immediately, no Gemini needed
+    const welcome = document.getElementById("welcome");
     const sessionType = stateData.session_type;
     const userId = stateData.user;
+    const isMember = sessionType === "member" && userId && userId !== "guest";
 
-    // 1. Fetch the Gemini-powered recommendations
+    let html = "";
+    if (isMember) {
+        const name = userId.charAt(0).toUpperCase() + userId.slice(1);
+        html += `<div class="greeting">Hey, <span>${name}</span>!</div>`;
+        if (stateData.bonus_points > 0) {
+            html += `<div class="points-badge">? ${stateData.bonus_points} bonus points</div>`;
+        }
+        html += `<div id="recs-area" style="min-height:60px;">
+                    <div style="color:#9a7a5a;font-size:15px;">Loading recommendations...</div>
+                 </div>`;
+    } else {
+        html += `<div class="greeting">Welcome!</div>`;
+        html += `<div class="guest-note">Browsing as guest</div>`;
+    }
+    html += `<button class="cta" onclick="goToMenu()">See full menu ?</button>`;
+
+    welcome.innerHTML = html;
+    document.getElementById("waiting").style.display = "none";
+    welcome.classList.add("visible");
+}
+
+async function loadRecommendations(stateData) {
+    // called after UI is already shown � Gemini failure won't block anything
+    const sessionType = stateData.session_type;
+    const userId = stateData.user;
+    const isMember = sessionType === "member" && userId && userId !== "guest";
+    if (!isMember) return;
+
     try {
         const r = await fetch("/get_recommendations");
         const d = await r.json();
-        if (d.success) {
-            recs = d.recommendations; // These now contain discounted prices if Gemini chose so
-            bonusPoints = d.bonus_points || 0;
-            aiPitch = d.pitch || "";      // Gemini's friendly pitch
-            loyaltyDeal = d.loyalty_deal || ""; // Gemini's points suggestion
-        }
-    } catch (e) { console.error("Rec error:", e); }
+        const recsArea = document.getElementById("recs-area");
+        if (!recsArea) return;
 
-    const welcome = document.getElementById("welcome");
-    const isMember = sessionType === "member" && userId && userId !== "guest";
-    let html = "";
-
-    if (isMember) {
-        const name = userId.charAt(0).toUpperCase() + userId.slice(1);
-        html += `<div class="greeting">Hey, <span>${name}</span>! ??</div>`;
-        
-        // AI PITCH BUBBLE
-        if (aiPitch) {
-            html += `
-            <div style="background: #fffbee; border: 2px dashed #7bbf6a; border-radius: 20px; padding: 15px; margin: 10px 0; font-style: italic; color: #4a6b3d;">
-                " ${aiPitch} "
-            </div>`;
+        if (!d.success || !d.recommendations || d.recommendations.length === 0) {
+            recsArea.innerHTML = `<div style="color:#9a7a5a;font-size:15px;">
+                                     Browse our full menu below!.</div>`;
+            return;
         }
 
-        // LOYALTY DEAL / BONUS POINTS
-        if (loyaltyDeal) {
-            html += `<div class="points-badge" style="background: #efad4d; margin-bottom: 10px;">?? ${loyaltyDeal}</div>`;
-        } else if (bonusPoints > 0) {
-            html += `<div class="points-badge">? ${bonusPoints} bonus points</div>`;
+        let html = "";
+        if (d.pitch) {
+            html += `<div style="background:#fffbee;border:2px dashed #7bbf6a;
+                         border-radius:20px;padding:15px;margin:10px 0;
+                         font-style:italic;color:#4a6b3d;">"${d.pitch}"</div>`;
         }
-
-        // RECOMMENDATIONS
-        if (recs.length > 0) {
-            html += `<div class="recs-label">Recommended for you</div><div class="recs">`;
-            for (const rec of recs) {
-                // Find the key for this product in your PRODUCTS object
-                const pKey = Object.keys(PRODUCTS).find(k => PRODUCTS[k].name === rec.name) || rec.name.toLowerCase().replace(/ /g,"_");
-                
-                // Highlight if there is a discount
-                const priceHtml = rec.is_discounted 
-                    ? `<span style="text-decoration: line-through; color: red; font-size: 0.8em;">${PRODUCTS[pKey].price}</span> ${rec.price} lei`
-                    : `${rec.price} lei`;
-
-                html += `
-                <div class="rec-card" onclick="addToCartAndGo('${pKey}', ${rec.price})">
-                    <div class="rec-name">${rec.name}</div>
-                    <div class="rec-times" style="font-weight: bold; color: #5a9e48;">${priceHtml}</div>
-                </div>`;
-            }
-            html += `</div>`;
+        html += `<div class="recs-label">Recommended for you</div><div class="recs">`;
+        for (const rec of d.recommendations) {
+            const pKey = Object.keys(PRODUCTS).find(
+                k => PRODUCTS[k].name === rec.name
+            ) || rec.name.toLowerCase().replace(/ /g, "_");
+            html += `<div class="rec-card" onclick="addToCartAndGo('${pKey}', ${rec.price})">
+                        <div class="rec-name">${rec.name}</div>
+                        <div class="rec-times" style="color:#5a9e48;font-weight:bold;">
+                            ${rec.price} lei</div>
+                     </div>`;
         }
-    } else {
-        html += `<div class="greeting">Welcome! ??</div>`;
-        html += `<div class="guest-note">Browsing as guest</div>`;
+        html += `</div>`;
+        recsArea.innerHTML = html;
+    } catch (e) {
+        const recsArea = document.getElementById("recs-area");
+        if (recsArea) recsArea.innerHTML = "";
     }
-
-    html += `<button class="cta" onclick="goToMenu()">See full menu ?</button>`;
-    welcome.innerHTML = html;
-
-    document.getElementById("waiting").style.display = "none";
-    welcome.classList.add("visible");
 }
 function addToCartAndGo(id, customPrice = null) {
     const item = PRODUCTS[id];
@@ -330,15 +322,70 @@ function goToMenu() {
   window.location.href = "/menu";
 }
  async function continueGuest() {
-    await fetch("/guest_login", {
-        method: "POST"
+    // log in as guest immediately � don't wait for recognizer
+    await fetch('/guest_login', { method: 'POST' });
+    // also tell recognizer to stop waiting
+    fetch('/request_enrollment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'guest'})
     });
 }
 
-async function registerMember() {
-    await fetch("/request_enrollment", {
-        method: "POST"
+function showEnrollForm() {
+    window.location.href = '/enroll';
+}
+
+function cancelEnroll() {
+    document.getElementById('enroll-panel').style.display = 'none';
+    document.getElementById('enroll-status').textContent = '';
+    document.getElementById('enroll-name-input').value = '';
+}
+
+async function submitEnrollName() {
+    const name = document.getElementById('enroll-name-input').value.trim().toLowerCase();
+    if (!name) {
+        document.getElementById('enroll-status').textContent = 'Please enter a name.';
+        return;
+    }
+    document.getElementById('enroll-status').textContent = 'Starting enrollment...';
+
+    // Step 1: write enrollment request to Firebase
+    await fetch('/start_enrollment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name})
     });
+
+    // Step 2: tell recognizer to begin enrollment
+    await fetch('/request_enrollment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'enroll'})
+    });
+
+    document.getElementById('enroll-status').textContent =
+        'Look at the camera on the laptop � stay still!';
+    pollEnrollmentStatus();
+}
+
+function pollEnrollmentStatus() {
+    const interval = setInterval(async () => {
+        const r = await fetch('/enrollment_status');
+        const d = await r.json();
+        if (d.status === 'done') {
+            clearInterval(interval);
+            document.getElementById('enroll-status').textContent =
+                'Enrolled! Please look at the camera to log in.';
+            setTimeout(() => {
+                document.getElementById('enroll-panel').style.display = 'none';
+                document.getElementById('enroll-status').textContent = '';
+            }, 3000);
+        } else if (d.status === 'capturing') {
+            document.getElementById('enroll-status').textContent =
+                'Capturing your face... stay still!';
+        }
+    }, 1500);
 }
 </script>
 </body>

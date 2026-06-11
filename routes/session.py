@@ -56,13 +56,15 @@ def _handle_face_login(user_id):
 
 @session_bp.route("/get_state")
 def get_state():
-    state = db.child("current_state").get().val() or {}
+    # Read directly from Firebase � avoids in-memory state being wrong
+    # in Flask debug/reloader child process
+    state  = db.child("current_state").get().val() or {}
     session = db.child("current_session").get().val() or {}
     return jsonify({
-        "state": state.get("state", KioskState.WAITING_FACE),
-        "user": state.get("user"),
+        "state":        state.get("state", KioskState.WAITING_FACE),
+        "user":         state.get("user"),
         "session_type": session.get("type"),
-        "card_uid": session.get("card_uid"),
+        "card_uid":     session.get("card_uid"),
         "bonus_points": session.get("bonus_points", 0)
     })
 
@@ -71,7 +73,7 @@ def get_state():
 def logout():
     clear_session(db)
     StateManager.reset()
-    return jsonify({"success": True})
+    return jsonify({"success": True, "redirect": "/"})
 
 
 @session_bp.route("/get_recommendations")
@@ -127,7 +129,6 @@ def get_recommendations():
     })
 
 
-# ← Previously this was incorrectly indented INSIDE get_recommendations
 @session_bp.route("/get_upsell", methods=["POST"])
 def get_upsell():
     from services.gemini_service import get_upsell_pitch
@@ -192,3 +193,51 @@ def get_checkout_offer():
         "reason": offer["reason"],
         "condition": offer["condition"]
     })
+
+@session_bp.route("/request_enrollment", methods=["POST"])    
+def request_enrollment():
+    """Tells the laptop recognizer what to do (guest or enroll)."""
+    data = request.get_json() or {}
+    action = data.get("action", "guest")  # "guest" or "enroll"
+    db.child("kiosk_command").set({"action": action})
+    print(f"[KIOSK] Command sent to recognizer: {action}")
+    return jsonify({"success": True})
+
+
+@session_bp.route("/start_enrollment", methods=["POST"])
+def start_enrollment():
+    """Writes the name to Firebase so recognizer.py knows who to enroll."""
+    data = request.get_json() or {}
+    name = data.get("name", "").strip().lower()
+    if not name:
+        return jsonify({"success": False, "error": "Name required"}), 400
+    db.child("enrollment_request").set({
+        "name": name,
+        "status": "pending",
+        "timestamp": time.time()
+    })
+    print(f"[ENROLL] Enrollment request for: {name}")
+    return jsonify({"success": True})
+
+
+@session_bp.route("/enrollment_status")
+def enrollment_status():
+    """Pi polls this to know when the laptop is done capturing."""
+    data = db.child("enrollment_request").get().val() or {}
+    return jsonify({"status": data.get("status", "idle")})
+
+
+@session_bp.route("/guest_login", methods=["POST"])
+def guest_login():
+    """Direct guest login without going through recognizer."""
+    import time as _t
+    db.child("current_session").set({
+        "user_id": None,
+        "card_uid": "",
+        "bonus_points": 0,
+        "type": "guest",
+        "status": "ready",
+        "timestamp": _t.time()
+    })
+    StateManager.set(KioskState.LOGGED_IN, user="guest")
+    return jsonify({"success": True})

@@ -210,7 +210,7 @@
 
             <div class="section" style="text-align:center;">
                 <h2 class="section-title">Track on your phone</h2>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://172.20.10.2:5000/track/{{ order.order_id }}" style="border-radius:12px;" />                <p style="color:#9a7b5f; font-size:0.9rem; margin-top:8px;">Scan to follow your order status</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ base_url }}/track/{{ order.order_id }}" style="border-radius:12px;" />                <p style="color:#9a7b5f; font-size:0.9rem; margin-top:8px;">Scan to follow your order status</p>
         </div>
         <div class="section">
             <h2 class="section-title">Your order</h2>
@@ -252,5 +252,31 @@
 
         <div class="small-note">This page refreshes automatically.</div>
     </div>
+
+<script>
+// Poll state — when reset happens, redirect to start
+let wasReady = false;
+const orderStatus = "{{ order.status }}";
+if (orderStatus === "ready") wasReady = true;
+
+setInterval(async function() {
+    try {
+        const r = await fetch("/get_state");
+        const d = await r.json();
+        if (d.state === "waiting_face") {
+            window.location.href = "/";
+        }
+        // also auto-redirect 35s after order is ready
+    } catch(e) {}
+}, 1000);
+
+// Auto logout and redirect after 35 seconds always
+// (order will be ready by then for demo purposes)
+setTimeout(async function() {
+    await fetch("/logout", { method: "POST" });
+    window.location.href = "/";
+}, 35000);
+</script>
+
 </body>
 </html>

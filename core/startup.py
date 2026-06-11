@@ -1,5 +1,5 @@
 import threading
-from services.fb_listener import listen_orders, listen_session, register_face_callback
+from services.fb_listener import listen_orders, listen_session, register_face_callback, auto_complete_orders
 from services.rfid_reader import rfid_loop
 
 
@@ -14,5 +14,6 @@ def start_background_services():
     threading.Thread(target=listen_orders, daemon=True).start()
     threading.Thread(target=listen_session, daemon=True).start()
     threading.Thread(target=rfid_loop, daemon=True).start()
+    threading.Thread(target=auto_complete_orders, daemon=True).start()
 
     print("[SYSTEM] Ready.")

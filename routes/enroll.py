@@ -41,3 +41,62 @@ def enroll_save():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@enroll_bp.route("/enroll/submit", methods=["POST"])
+def enroll_submit():
+    try:
+        data = request.get_json() or {}
+        name = data.get("name", "").strip().lower()
+        if not name:
+            return jsonify({"success": False, "error": "Name required"}), 400
+
+        profile = {
+            "name": name,
+            "card_uid": "",
+            "bonus_points": 0,
+            "total_orders": 0,
+            "history": {},
+            "preferences": {
+                "diet": data.get("diet", ["non_vegetarian"]),
+                "favorite_category": data.get("favorite_category", "any"),
+                "budget_range": {
+                    "min": int(data.get("budget_min", 10)),
+                    "max": int(data.get("budget_max", 50))
+                }
+            }
+        }
+
+        # save member profile
+        db.child("members").child(name).set(profile)
+
+        # set enrollment_request so laptop recognizer knows who to capture
+        db.child("enrollment_request").set({
+            "name": name,
+            "status": "pending",
+            "timestamp": time.time()
+        })
+
+        print(f"[ENROLL] Profile saved and enrollment requested for: {name}")
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@enroll_bp.route("/enroll/reset", methods=["POST"])
+def enroll_reset():
+    """Clear stale enrollment state before starting new enrollment."""
+    db.child("enrollment_request").remove()
+    db.child("kiosk_command").remove()
+    return jsonify({"success": True})
+
+@enroll_bp.route("/enroll/complete", methods=["POST"])
+def enroll_complete():
+    """Called by Pi after enrollment done — clears session so waiting screen shows."""
+    import time as _t
+    db.child("current_session").remove()
+    db.child("current_state").set({
+        "state": "waiting_face",
+        "user": None,
+        "timestamp": _t.time()
+    })
+    db.child("enrollment_request").remove()
+    return jsonify({"success": True})

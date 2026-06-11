@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template
+import os
+from flask import Blueprint, render_template, request
 from services.firebase_config import db
 from services.hardware_service import set_ready_led
 from utils.order_utils import compute_order_status
@@ -7,12 +8,22 @@ from services.session_service import get_valid_session
 from flask import jsonify
 
 pages_bp = Blueprint("pages", __name__)
+def get_base_url():
+    try:
+        config = db.child("config").get().val() or {}
+        return config.get("base_url", os.environ.get("BASE_URL", "http://172.20.10.2:5000"))
+    except:
+        return os.environ.get("BASE_URL", "http://172.20.10.2:5000")
 
+
+_cached_products = None
 
 @pages_bp.route("/")
 def start():
-    products=get_products() or {}
-    return render_template("start.html", menu_items=products)
+    global _cached_products
+    if _cached_products is None:
+        _cached_products = get_products() or {}
+    return render_template("start.html", menu_items=_cached_products)
 
 @pages_bp.route("/menu")
 def menu():
@@ -118,7 +129,8 @@ def client_order(order_id):
                 data.get("estimated_time", 0)
             )
             set_ready_led(status == "ready")
-            return render_template("client_order.html", order={
+            base_url = get_base_url()
+            return render_template("client_order.html", base_url=base_url, order={
                 "id": key,
                 "order_id": order_id,
                 "display_number": data.get("display_number"),
@@ -143,27 +155,45 @@ def serve_sw():
         'firebase-messaging-sw.js',
         mimetype='application/javascript'
     )
-@pages_bp.route("/request_enrollment", methods=["POST"])
-def request_enrollment():
 
-    db.child("kiosk_command").set({
-        "action": "enroll"
-    })
+@pages_bp.route("/enroll")
+def enroll_page():
+    return render_template("enroll.html")
 
-    return jsonify({"success": True})
-@pages_bp.route("/guest_login", methods=["POST"])
-def guest_login():
-
-    db.child("current_session").set({
-        "user_id": "guest",
-        "card_uid": "",
-        "bonus_points": 0,
-        "type": "guest",
-        "status": "active"
-    })
-
-    db.child("current_state").set({
-        "state": "logged_in"
-    })
-
-    return jsonify({"success": True})
+@pages_bp.route("/track/<order_id>")
+def track_order(order_id):
+    orders = db.child("orders").get().val() or {}
+    for key, data in orders.items():
+        if data.get("order_id") == order_id:
+            status, remaining = compute_order_status(
+                data.get("created_at", ""),
+                data.get("estimated_time", 0)
+            )
+            earned_points = data.get("earned_points", 0)
+            user_id = data.get("user_id", "")
+            total_points = 0
+            if user_id:
+                try:
+                    member = db.child("members").child(user_id).get().val() or {}
+                    total_points = member.get("bonus_points", 0)
+                except:
+                    pass
+            return render_template("mobile_track.html",
+                order={
+                    "order_id": order_id,
+                    "display_number": data.get("display_number"),
+                    "status": status,
+                    "remaining_time": remaining,
+                    "estimated_time": data.get("estimated_time", 0),
+                    "total": data.get("total"),
+                    "products": data.get("products"),
+                    "payment_method": data.get("payment_method"),
+                    "payment_status": data.get("payment_status"),
+                    "time": data.get("time"),
+                    "discount_used": data.get("discount_used", 0),
+                },
+                earned_points=earned_points,
+                total_points=total_points,
+                order_id=order_id
+            )
+    return "Order not found", 404

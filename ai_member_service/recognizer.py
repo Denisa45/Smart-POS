@@ -23,7 +23,7 @@ import cv2
 import firebase_admin
 from firebase_admin import credentials, db as fdb
 from deepface import DeepFace
-
+from 
 import enroll
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -114,6 +114,7 @@ def run_enrollment(cap):
     new_cap = cv2.VideoCapture(0)
     if not new_cap.isOpened():
         sys.exit("[ERROR] Cannot reopen camera after enrollment")
+    
     return new_cap
 
 def write_guest_session():

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Become a Member</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; background: #e9e3b4;
+    display: flex; justify-content: center; align-items: center;
+    font-family: "Segoe UI", sans-serif; color: #7a5c3e; padding: 20px;
+  }
+  .card {
+    background: #fff8e8; border-radius: 28px; border: 2px solid #ceb98d;
+    padding: 36px 40px; max-width: 520px; width: 100%; text-align: center;
+  }
+  h1 { font-size: 32px; margin-bottom: 8px; color: #5a3e1e; }
+  .subtitle { font-size: 16px; color: #9a7a5a; margin-bottom: 28px; }
+  .field { margin-bottom: 18px; text-align: left; }
+  label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; }
+  input[type=text], input[type=number], select {
+    width: 100%; padding: 12px 16px; font-size: 16px;
+    border-radius: 12px; border: 2px solid #ceb98d;
+    background: #fffdf5; color: #5a3e1e; outline: none; font-family: inherit;
+  }
+  input:focus, select:focus { border-color: #7bbf6a; }
+  .diet-options { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .diet-btn {
+    padding: 8px 18px; border-radius: 20px; border: 2px solid #ceb98d;
+    background: #fff8e8; cursor: pointer; font-size: 15px;
+    font-family: inherit; color: #7a5c3e; transition: all 0.15s;
+  }
+  .diet-btn.selected { background: #7bbf6a; border-color: #7bbf6a; color: white; }
+  .budget-row { display: flex; gap: 12px; align-items: center; }
+  .budget-row input { flex: 1; }
+  .budget-row span { font-size: 14px; color: #9a7a5a; white-space: nowrap; }
+  .cta {
+    width: 100%; padding: 16px; font-size: 20px; border-radius: 30px;
+    border: none; background: #7bbf6a; color: white; cursor: pointer;
+    font-weight: 700; margin-top: 10px; font-family: inherit;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .cta:hover { transform: scale(1.02); background: #6aae5a; }
+  .cta.cancel { background: #bbb; }
+  .cta.cancel:hover { background: #aaa; }
+  #status-panel { display: none; text-align: center; padding: 20px 0; }
+  #status-icon { font-size: 60px; margin-bottom: 16px; }
+  #status-text { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  #status-sub { font-size: 15px; color: #9a7a5a; }
+  .progress-bar {
+    width: 100%; height: 8px; background: #e0d8b0;
+    border-radius: 4px; margin-top: 20px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: #7bbf6a; border-radius: 4px;
+    width: 0%; transition: width 0.5s;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="form-panel">
+    <h1>Become a Member</h1>
+    <p class="subtitle">Fill in your details and look at the laptop camera</p>
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="name" placeholder="e.g. ana" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Diet preference</label>
+      <div class="diet-options">
+        <button class="diet-btn selected" data-diet="non_vegetarian" onclick="toggleDiet(this)">Everything</button>
+        <button class="diet-btn" data-diet="vegetarian" onclick="toggleDiet(this)">Vegetarian</button>
+        <button class="diet-btn" data-diet="vegan" onclick="toggleDiet(this)">Vegan</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Favourite category</label>
+      <select id="fav-category">
+        <option value="any">Any</option>
+        <option value="pizza">Pizza</option>
+        <option value="main">Main dishes</option>
+        <option value="salad">Salads</option>
+        <option value="breakfast">Breakfast</option>
+        <option value="drink">Drinks</option>
+        <option value="dessert">Desserts</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Budget range (lei)</label>
+      <div class="budget-row">
+        <input type="number" id="budget-min" value="10" min="5" max="100"/>
+        <span>to</span>
+        <input type="number" id="budget-max" value="50" min="5" max="200"/>
+      </div>
+    </div>
+    <button class="cta" onclick="submitEnrollment()">Register and Capture Face</button>
+    <button class="cta cancel" onclick="window.location.href='/'">Cancel</button>
+  </div>
+  <div id="status-panel">
+    <div id="status-icon">X</div>
+    <div id="status-text">Saving your profile...</div>
+    <div id="status-sub">Please wait</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+</div>
+<script>
+  var selectedDiets = ["non_vegetarian"];
+  function toggleDiet(btn) {
+    var diet = btn.dataset.diet;
+    if (btn.classList.contains("selected")) {
+      if (selectedDiets.length > 1) {
+        btn.classList.remove("selected");
+        selectedDiets = selectedDiets.filter(function(d){ return d !== diet; });
+      }
+    } else {
+      btn.classList.add("selected");
+      selectedDiets.push(diet);
+    }
+  }
+  async function submitEnrollment() {
+    var name = document.getElementById("name").value.trim().toLowerCase();
+    if (!name) { alert("Please enter your name"); return; }
+    document.getElementById("form-panel").style.display = "none";
+    document.getElementById("status-panel").style.display = "block";
+    document.getElementById("status-text").textContent = "Saving your profile...";
+    document.getElementById("progress-fill").style.width = "20%";
+    var profile = {
+      name: name,
+      diet: selectedDiets,
+      favorite_category: document.getElementById("fav-category").value,
+      budget_min: parseInt(document.getElementById("budget-min").value),
+      budget_max: parseInt(document.getElementById("budget-max").value)
+    };
+    // clear any stale enrollment state first
+    await fetch("/enroll/reset", { method: "POST" });
+    var r = await fetch("/enroll/submit", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(profile)
+    });
+    var d = await r.json();
+    if (!d.success) { alert("Error: " + d.error); window.location.href = "/"; return; }
+    document.getElementById("progress-fill").style.width = "40%";
+    document.getElementById("status-icon").textContent = "CAM";
+    document.getElementById("status-text").textContent = "Look at the laptop camera!";
+    document.getElementById("status-sub").textContent = "Stay still while we capture your face...";
+    await fetch("/request_enrollment", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({action: "enroll"})
+    });
+    pollStatus();
+  }
+  function pollStatus() {
+    var progress = 40;
+    var interval = setInterval(async function() {
+      try {
+        var r = await fetch("/enrollment_status");
+        var d = await r.json();
+        if (d.status === "capturing") {
+          progress = Math.min(progress + 5, 85);
+          document.getElementById("progress-fill").style.width = progress + "%";
+          document.getElementById("status-sub").textContent = "Capturing your face... stay still!";
+        } else if (d.status === "done") {
+          clearInterval(interval);
+          document.getElementById("progress-fill").style.width = "100%";
+          document.getElementById("status-icon").textContent = "OK";
+          document.getElementById("status-text").textContent = "Enrolled successfully!";
+          document.getElementById("status-sub").textContent = "Look at the camera to log in!";
+          // clear session so Pi returns to waiting screen
+          fetch("/enroll/complete", { method: "POST" }).then(function() {
+            setTimeout(function(){ window.location.href = "/"; }, 2000);
+          });
+        }
+      } catch(e) {}
+    }, 1500);
+  }
+</script>
+</body>
+</html>

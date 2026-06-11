@@ -36,3 +36,20 @@ def update_points(user_id, points):
     ref = db.child(f"members/{user_id}/points")
     current = ref.get().val() or 0
     ref.set(current + points)
+def reset_kiosk_state():
+    fdb.reference("current_session").set({
+        "user_id": "",
+        "card_uid": "",
+        "bonus_points": 0,
+        "type": "guest",
+        "status": "ready",
+        "timestamp": time.time()
+    })
+
+    fdb.reference("current_state").set({
+        "state": "waiting_face",
+        "user": "none",
+        "timestamp": time.time()
+    })
+
+    print("[RESET] Firebase kiosk state reset done")

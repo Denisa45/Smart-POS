@@ -15,6 +15,7 @@
 # ~ import uuid
 
 # ~ import time
+from core.state import StateManager, KioskState
 
 
 
@@ -436,12 +437,36 @@ def rfid_loop():
                     "uid": uid,
                     "timestamp": time.time()
                 })
-
+                # look up member by card and write a full session
+                card_data = db.child("cards").child(uid).get().val() or {}
+                member_id = card_data.get("member_id")
+                if member_id:
+                    member = db.child("members").child(member_id).get().val() or {}
+                    db.child("current_session").set({
+                        "user_id": member_id,
+                        "card_uid": uid,
+                        "bonus_points": member.get("bonus_points", 0),
+                        "type": "member",
+                        "status": "active",
+                        "timestamp": time.time()
+                    })
+                    StateManager.set(KioskState.LOGGED_IN, user=member_id)
+                    print(f"[RFID] Member login: {member_id}")
+                else:
+                    db.child("current_session").set({
+                        "user_id": "guest",
+                        "card_uid": uid,
+                        "bonus_points": 0,
+                        "type": "guest",
+                        "status": "active",
+                        "timestamp": time.time()
+                    })
+                    StateManager.set(KioskState.LOGGED_IN, user="guest")
+                    print(f"[RFID] Unknown card {uid} � guest session with card")
                 # optional LED blink
                 set_ready_led(True)
                 time.sleep(0.2)
                 set_ready_led(False)
-
                 time.sleep(2)  # debounce (VERY important)
 
         except Exception as e:

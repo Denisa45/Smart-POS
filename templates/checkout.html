@@ -210,7 +210,7 @@
     border-radius: 24px; padding: 18px 24px;
     margin-bottom: 24px;">
     <div style="font-size:0.85rem; color:#9a7b5f; margin-bottom:6px;">
-        ?? Special offer for you
+         Special offer for you
     </div>
     <div id="offer-reason" style="font-size:1.05rem; color:#7b5a3d; font-weight:600;"></div>
     <div id="offer-value" style="font-size:0.95rem; color:#c9873a; margin-top:4px;"></div>
@@ -254,21 +254,21 @@
 
 <div class="payment-options">
   <div class="payment-card active" onclick="selectPayment('Card', this)">
-    <div class="payment-title">?? Card</div>
+    <div class="payment-title"> Card</div>
     <div class="payment-desc">
       Pay by tapping your RFID card on the reader.
     </div>
   </div>
 
   <div class="payment-card" onclick="selectPayment('Cash', this)">
-    <div class="payment-title">?? Cash</div>
+    <div class="payment-title"> Cash</div>
     <div class="payment-desc">
       Pay with cash at collection.
     </div>
   </div>
 </div>
 <div class="payment-card" id="points-box" style="margin-top:18px;">
-  <div class="payment-title">? Loyalty Points</div>
+  <div class="payment-title"> Loyalty Points</div>
   <div class="payment-desc">
     You currently have <strong id="points-value">{{ bonus_points or 0 }}</strong> points.
     {% if bonus_points >= 10 %}
@@ -334,7 +334,7 @@ function applyOffer() {
     document.getElementById("grand-total").textContent = final + " lei";
 
     const note = document.getElementById("checkout-note");
-    note.textContent = checked ? `?? You save ${offerDiscount} lei with this offer!` : "";
+    note.textContent = checked ? ` You save ${offerDiscount} lei with this offer!` : "";
 }
 
 // call on page load
@@ -363,7 +363,7 @@ selectPayment("Card", document.querySelector(".payment-card.active"));
 
   let note = document.getElementById("checkout-note");
   if (data.discount > 0) {
-    note.textContent = `?? You save ${data.discount} lei using loyalty points!`;
+    note.textContent = ` You save ${data.discount} lei using loyalty points!`;
   } else {
     note.textContent = "";
   }
@@ -476,5 +476,12 @@ selectPayment("Card", document.querySelector(".payment-card.active"));
     loadCheckout();
     selectPayment("Card", document.querySelector(".payment-card.active"));
   </script>
+<button onclick="exitKiosk()" style="position:fixed;bottom:20px;right:20px;background:rgba(180,60,60,0.9);color:white;border:none;border-radius:999px;padding:12px 24px;font-size:16px;font-weight:700;cursor:pointer;z-index:999;font-family:inherit;">Exit</button>
+<script>
+async function exitKiosk() {
+    await fetch('/logout', {method:'POST'});
+    window.location.href = '/';
+}
+</script>
 </body>
 </html>

@@ -48,8 +48,18 @@ def listen_orders():
                     any_ready = True
                     real_order_id = o.get("order_id", order_id)
 
-                    # announce only once
+                    # announce only once, and only if order became ready recently
                     if real_order_id not in notified_orders:
+                        # skip orders older than 2 minutes to avoid announcing on restart
+                        try:
+                            from datetime import datetime as _dt
+                            _created = o.get("created_at", "")
+                            _age = (_dt.now() - _dt.fromisoformat(str(_created))).total_seconds()
+                            if _age > 300:  # skip orders older than 5 minutes on startup
+                                notified_orders.add(real_order_id)
+                                continue
+                        except:
+                            pass
 
                         notified_orders.add(real_order_id)
 
@@ -142,6 +152,37 @@ def listen_orders():
             print("[ORDER LISTENER ERROR]", e)
 
         time.sleep(2)
+
+def auto_complete_orders():
+    """Mark orders as ready after their estimated prep time and reset kiosk."""
+    import time as _time
+    completed = set()
+    while True:
+        try:
+            orders = db.child("orders").get().val() or {}
+            for order_id, o in orders.items():
+                if not isinstance(o, dict): continue
+                if order_id in completed: continue
+                if o.get("payment_status") != "paid": continue
+                if o.get("status") == "ready": continue
+
+                created_at = o.get("created_at", "")
+                prep_time = int(o.get("estimated_time", 5))
+                try:
+                    from datetime import datetime as _dt
+                    order_time = _dt.fromisoformat(str(created_at))
+                    age = (_dt.now() - order_time).total_seconds()
+                    if age >= prep_time * 60 and age < 600:  # skip orders older than 10 minutes
+                        real_id = o.get("order_id", order_id)
+                        db.child("orders").child(order_id).update({"status": "ready"})
+                        completed.add(order_id)
+                        print(f"[AUTO] Order {real_id} marked ready after {prep_time}min")
+                except Exception as e:
+                    pass
+        except Exception as e:
+            print("[AUTO-COMPLETE ERROR]", e)
+        _time.sleep(10)
+
 # -------------------------
 # SESSION LISTENER
 # -------------------------

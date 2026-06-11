@@ -15,8 +15,8 @@ if not firebase_admin._apps:
 #     try:
 #         message = messaging.Message(
 #             notification=messaging.Notification(
-#                 title="Denisa's Special ???",
-#                 body=f"Order #{order_number} is ready! Come pick it up ??",
+#                 title="Denisa's Special ?",
+#                 body=f"Order #{order_number} is ready! Come pick it up ?",
 #             ),
 #             token=token,
 #         )
@@ -32,15 +32,15 @@ def send_order_ready_notification(token, order_number):
         message = messaging.Message(
 
             notification=messaging.Notification(
-                title="Denisa's Special ??",
-                body=f"Order #{order_number} is ready! Come pick it up ??",
+                title="Denisa's Special ",
+                body=f"Order #{order_number} is ready! Come pick it up ",
             ),
 
             webpush=messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
-                    title="Denisa's Special ??",
-                    body=f"Order #{order_number} is ready! Come pick it up ??",
-                    icon="https://YOUR_PI_IP/static/assets/icon.png",
+                    title="Denisa's Special ",
+                    body=f"Order #{order_number} is ready! Come pick it up ",
+                    icon="https://skype-dinner-headband.ngrok-free.dev/static/assets/icon.png",
                 ),
             ),
 

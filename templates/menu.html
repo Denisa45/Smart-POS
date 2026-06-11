@@ -821,5 +821,19 @@
 
 </script>
 
+<button onclick="exitKiosk()" style="
+    position:fixed; bottom:20px; right:20px;
+    background:rgba(200,100,100,0.85); color:white;
+    border:none; border-radius:999px;
+    padding:12px 24px; font-size:16px; font-weight:700;
+    cursor:pointer; z-index:999; font-family:inherit;">
+    Exit
+</button>
+<script>
+async function exitKiosk() {
+    await fetch('/logout', {method:'POST'});
+    window.location.href = '/';
+}
+</script>
 </body>
 </html>

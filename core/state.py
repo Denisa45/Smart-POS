@@ -1,7 +1,6 @@
 import time
 from services.firebase_config import db
 
-
 class KioskState:
     WAITING_FACE = "waiting_face"
     CARD_DETECTED = "card_detected"
@@ -9,7 +8,6 @@ class KioskState:
     ORDERING = "ordering"
     PAYMENT = "payment"
     DONE = "done"
-
 
 class StateManager:
     current_state = KioskState.WAITING_FACE
@@ -20,14 +18,23 @@ class StateManager:
         cls.current_state = new_state
         if user is not None:
             cls.current_user = user
-        print(f"[STATE] → {new_state} | user={cls.current_user}")
+        print(f"[STATE] -> {new_state} | user={cls.current_user}")
         cls._sync()
 
     @classmethod
     def reset(cls):
         cls.current_state = KioskState.WAITING_FACE
         cls.current_user = None
-        cls._sync()
+        try:
+            db.child("current_state").set({
+                "state": "waiting_face",
+                "user": None,
+                "timestamp": time.time()
+            })
+            db.child("current_session").remove()
+            print("[STATE] FULL RESET DONE")
+        except Exception as e:
+            print("[STATE RESET ERROR]", e)
 
     @classmethod
     def _sync(cls):

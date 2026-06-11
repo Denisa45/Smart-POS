@@ -54,6 +54,15 @@ def place_order():
         if session:
             uid = session.get("card_uid")
             user_id = session.get("user_id")
+        if not uid:
+            import time as _time
+            last_card = db.child("last_card").get().val() or {}
+            card_ts = last_card.get("timestamp", 0)
+            if _time.time() - card_ts < 120:
+                uid = last_card.get("uid")
+        # only block if card payment and no card found
+        if not uid and payment_method != "Cash":
+            return jsonify({"success": False, "error": "Please tap your card to pay"}), 400
  
         if use_points and session:
             member = None
@@ -207,12 +216,14 @@ def check_card_payment(order_id):
 
 
         session = get_valid_session(db)
-        if not session:
-            return jsonify({"success": False, "error": "No active session — tap your card"}), 400
-
-        uid = session.get("card_uid")
+        uid = session.get("card_uid") if session else None
         if not uid:
-            return jsonify({"success": False, "error": "No card linked to this session"}), 400
+            import time as _time
+            last_card = db.child("last_card").get().val() or {}
+            if _time.time() - last_card.get("timestamp", 0) < 300:
+                uid = last_card.get("uid")
+        if not uid:
+            return jsonify({"success": False, "error": "Please tap your card to pay"}), 400
 
         ok, message, new_balance = process_card_payment(uid, target_order["total"])
         if not ok:
@@ -220,8 +231,28 @@ def check_card_payment(order_id):
 
         db.child("orders").child(target_key).update({
             "payment_status": "paid",
-            "card_uid": uid
+            "card_uid": uid,
+            "status": "ready"
         })
+        # announce order ready immediately after payment
+        try:
+            from services.tts_service import announce_order_ready
+            from services.fcm_service import send_order_ready_notification
+            session = get_valid_session(db)
+            user_id = session.get("user_id", "guest") if session else "guest"
+            customer_name = user_id.capitalize() if user_id and user_id != "guest" else "Customer"
+            display_num = target_order.get("display_number", "?")
+            print(f"[TTS] Announcing order {display_num} ready for {customer_name}")
+            announce_order_ready(customer_name, display_num)
+            # send push notification
+            token_data = db.child("fcm_tokens").child(order_id).get().val()
+            if not token_data:
+                token_data = db.child("fcm_tokens").child("latest").get().val()
+            if token_data and token_data.get("token"):
+                send_order_ready_notification(token_data["token"], display_num)
+                print(f"[FCM] Push sent for order {display_num}")
+        except Exception as tts_e:
+            print(f"[TTS/FCM ERROR] {tts_e}")
         member = db.child("members").child(uid).get().val() or {}
 
         current_points = member.get("bonus_points", 0)
@@ -313,5 +344,7 @@ def save_fcm_token():
     token = data.get("token")
     if order_id and token:
         db.child("fcm_tokens").child(order_id).set({"token": token})
+        # also save as latest so it's always findable
+        db.child("fcm_tokens").child("latest").set({"token": token})
         return jsonify({"success": True})
     return jsonify({"success": False}), 400
