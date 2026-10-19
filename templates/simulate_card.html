@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulate Card Tap</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #e8e2b8;
+      font-family: "Segoe UI", sans-serif;
+      color: #7b5a3d;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: #f8f4e4;
+      border: 2px solid #ceb98d;
+      border-radius: 36px;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(123, 90, 61, 0.08);
+    }
+
+    h1 { margin: 0 0 12px 0; font-size: 2rem; }
+    p  { margin: 0 0 16px 0; color: #9a7b5f; }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 2px solid #ceb98d;
+      border-radius: 18px;
+      background: #fffdf3;
+      color: #7b5a3d;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 18px;
+      background: #7dbb6d;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status { margin-top: 16px; font-weight: 700; min-height: 1.4em; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>💳 Simulate Card Tap</h1>
+    <p>Demo mode: acts like tapping an RFID card on the reader. Keep the kiosk open in another tab.</p>
+
+    <select id="known" onchange="document.getElementById('uid').value = this.value">
+      <option value="">— pick a registered card —</option>
+      {% for uid, card in cards.items() %}
+        <option value="{{ uid }}">{{ uid }}{% if card.member_id %} ({{ card.member_id }}){% endif %}{% if card.balance is defined %} · balance {{ card.balance }}{% endif %}</option>
+      {% endfor %}
+    </select>
+    <input id="uid" placeholder="or type a card UID" />
+    <button onclick="tap()">Tap card</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    async function tap() {
+      const uid = document.getElementById('uid').value.trim();
+      const status = document.getElementById('status');
+      if (!uid) { status.textContent = 'Enter or pick a card UID'; return; }
+      const res = await fetch('/simulate_card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid })
+      });
+      const data = await res.json();
+      status.textContent = data.success ? `Card ${data.uid} tapped ✔` : data.error;
+    }
+  </script>
+</body>
+</html>

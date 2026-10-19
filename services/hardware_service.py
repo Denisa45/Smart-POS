@@ -1,9 +1,8 @@
-from gpiozero import LED
-
 GPIO_AVAILABLE = True
 last_state = None  # track last state to avoid toggling on every request
 
 try:
+    from gpiozero import LED
     green_led = LED(17)
     yellow_led = LED(27)
     print("[GPIO] LEDs initialized on GPIO17 (green) and GPIO27 (yellow)")

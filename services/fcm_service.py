@@ -2,14 +2,17 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 import os
 
-# only initialize once
+# only initialize once; push notifications are skipped if the key file is missing
 if not firebase_admin._apps:
-    cred = credentials.Certificate(
-        os.path.join(os.path.dirname(__file__), "..", "serviceAccountKey.json")
-    )
-    firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://iot-kiosk-pos-default-rtdb.europe-west1.firebasedatabase.app"
-    })
+    try:
+        cred = credentials.Certificate(
+            os.path.join(os.path.dirname(__file__), "..", "serviceAccountKey.json")
+        )
+        firebase_admin.initialize_app(cred, {
+            "databaseURL": "https://iot-kiosk-pos-default-rtdb.europe-west1.firebasedatabase.app"
+        })
+    except Exception as e:
+        print("[FCM] Disabled (no serviceAccountKey.json):", e)
 
 # def send_order_ready_notification(token, order_number):
 #     try:
