@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 import time
 
 from services.firebase_config import db
@@ -241,3 +241,20 @@ def guest_login():
     })
     StateManager.set(KioskState.LOGGED_IN, user="guest")
     return jsonify({"success": True})
+
+@session_bp.route("/simulate_card", methods=["GET", "POST"])
+def simulate_card():
+    """Simulate an RFID tap from the browser (demo without the Raspberry Pi)."""
+    from services.rfid_reader import handle_card_tap
+    if request.method == "GET":
+        cards = db.child("cards").get().val() or {}
+        return render_template("simulate_card.html", cards=cards)
+    try:
+        data = request.get_json(silent=True) or request.form
+        uid = (data.get("uid") or "").strip()
+        if not uid:
+            return jsonify({"success": False, "error": "Missing card uid"}), 400
+        handle_card_tap(uid)
+        return jsonify({"success": True, "uid": uid})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
